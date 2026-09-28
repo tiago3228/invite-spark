@@ -93,6 +93,20 @@ function CreateInvitation() {
   function update<K extends keyof InvitationDraft>(key: K, value: InvitationDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
+  async function ensureDraftId() {
+    if (!userId || !draft.eventType) return undefined;
+    if (draft.id) return draft.id;
+    setSaveState("Salvando rascunho…");
+    try {
+      const id = await saveInvitationDraft(draft, userId);
+      setDraft((current) => ({ ...current, id }));
+      setSaveState("Rascunho salvo");
+      return id;
+    } catch {
+      setSaveState("Rascunho local");
+      return undefined;
+    }
+  }
   function next() {
     setError("");
     if (step < steps.length) setStep((current) => current + 1);
@@ -193,7 +207,14 @@ function CreateInvitation() {
               />
             )}
             {step === 2 && <MessageStep draft={draft} update={update} />}
-            {step === 3 && <MediaStep draft={draft} update={update} userId={userId} />}
+            {step === 3 && (
+              <MediaStep
+                draft={draft}
+                update={update}
+                userId={userId}
+                ensureDraftId={ensureDraftId}
+              />
+            )}
             {step === 4 && <LocationStep draft={draft} update={update} />}
             {step === 5 && <RsvpStep draft={draft} update={update} />}
             {step === 6 && <PreviewStep draft={draft} />}
@@ -233,6 +254,7 @@ type EditorProps = {
   draft: InvitationDraft;
   userId?: string | undefined;
   update: <K extends keyof InvitationDraft>(key: K, value: InvitationDraft[K]) => void;
+  ensureDraftId?: () => Promise<string | undefined>;
 };
 function Field({
   label,
@@ -514,18 +536,21 @@ function PresetChips({
     </div>
   );
 }
-function MediaStep({ draft, update, userId }: EditorProps) {
+function MediaStep({ draft, update, userId, ensureDraftId }: EditorProps) {
   const [uploading, setUploading] = useState<UploadKind | null>(null);
   const [uploadError, setUploadError] = useState("");
   async function upload(file: File, kind: UploadKind) {
-    if (!userId || !draft.id) {
-      setUploadError("Aguarde o primeiro salvamento automático do convite.");
+    const invitationId = draft.id ?? (await ensureDraftId?.());
+    if (!userId || !invitationId) {
+      setUploadError(
+        "Escolha o tipo de evento e aguarde o salvamento do rascunho antes de enviar.",
+      );
       return;
     }
     setUploading(kind);
     setUploadError("");
     try {
-      const { url } = await uploadInvitationFile(file, userId, draft.id, kind);
+      const { url } = await uploadInvitationFile(file, userId, invitationId, kind);
       if (kind === "cover") update("coverUrl", url);
       else if (kind === "image") update("galleryUrls", [...draft.galleryUrls, url]);
       else if (kind === "video") update("videoUrl", url);
@@ -730,13 +755,20 @@ function MediaStep({ draft, update, userId }: EditorProps) {
                 label={draft.videoUrl ? "Trocar vídeo" : "Enviar vídeo"}
               />
               {draft.videoUrl && (
-                <button
-                  type="button"
-                  onClick={() => void remove(draft.videoUrl, "video")}
-                  className="text-sm text-[#a45f4e]"
-                >
-                  Remover
-                </button>
+                <div className="mt-4 space-y-3">
+                  <video
+                    controls
+                    className="aspect-video w-full rounded-xl bg-[#232522]"
+                    src={draft.videoUrl}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void remove(draft.videoUrl, "video")}
+                    className="text-sm text-[#a45f4e]"
+                  >
+                    Remover vídeo
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -758,13 +790,16 @@ function MediaStep({ draft, update, userId }: EditorProps) {
                 label={draft.audioUrl ? "Trocar música" : "Enviar música"}
               />
               {draft.audioUrl && (
-                <button
-                  type="button"
-                  onClick={() => void remove(draft.audioUrl, "audio")}
-                  className="text-sm text-[#a45f4e]"
-                >
-                  Remover
-                </button>
+                <div className="mt-4 space-y-3">
+                  <audio controls className="w-full" src={draft.audioUrl} />
+                  <button
+                    type="button"
+                    onClick={() => void remove(draft.audioUrl, "audio")}
+                    className="text-sm text-[#a45f4e]"
+                  >
+                    Remover música
+                  </button>
+                </div>
               )}
             </div>
           </div>

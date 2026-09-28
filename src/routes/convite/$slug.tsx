@@ -110,14 +110,12 @@ function PublicInvitation() {
             <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
               <Play className="text-[#bd8051]" size={19} />
               <h2 className="mt-4 font-medium text-[#3f5146]">Um vídeo para você</h2>
-              <a
-                href={content["media"]["videoUrl"]}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#2f5145]"
-              >
-                Assistir <ChevronRight size={15} />
-              </a>
+              <video
+                controls
+                preload="metadata"
+                className="mt-4 aspect-video w-full rounded-xl bg-[#232522]"
+                src={content["media"]["videoUrl"]}
+              />
             </div>
           )}
           {content["media"]?.["audioUrl"] && (
