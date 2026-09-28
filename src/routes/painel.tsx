@@ -8,7 +8,6 @@ import {
   Flower2,
   Globe2,
   Loader2,
-  LogOut,
   MapPin,
   Palette,
   Plus,
@@ -17,8 +16,8 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { isSupabaseConfigured, supabase, getSupabaseSetupMessage } from "@/lib/supabase";
-import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { supabase, getSupabaseSetupMessage } from "@/lib/supabase";
+import { DashboardShell } from "@/components/DashboardShell";
 
 export const Route = createFileRoute("/painel")({
   component: Dashboard,
@@ -108,135 +107,170 @@ function Dashboard() {
     );
 
   return (
-    <main className="min-h-screen bg-[#fbfaf7] text-[#292724]">
-      <header className="border-b border-[#e6e0d7] bg-white/70">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
-          <Link to="/" className="flex items-center gap-2.5 text-[#2f5145]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e5eee6]">
-              <Flower2 size={18} />
-            </span>
-            <span className="font-serif text-xl">meu convite</span>
-          </Link>
-          <PWAInstallButton />
-          <button
-            type="button"
-            onClick={() => setShowHowWorks(true)}
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#5f7564] transition hover:text-[#2f5145]"
-            aria-label="Ver como funciona"
-          >
-            <CircleHelp size={16} /> Como funciona
-          </button>
-          <button
-            onClick={() => void signOut()}
-            className="flex items-center gap-2 text-sm text-[#77736b] transition hover:text-[#2f5145]"
-          >
-            <LogOut size={16} /> Sair
-          </button>
-        </div>
-      </header>
+    <DashboardShell
+      userName={userName}
+      onSignOut={() => void signOut()}
+      onHowWorks={() => setShowHowWorks(true)}
+    >
       {showHowWorks && <HowItWorksModal onClose={() => setShowHowWorks(false)} />}
-      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12">
-        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+      <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#bd8051]">
+            Visão geral
+          </p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-[#263d34] sm:text-5xl">
+            Olá, {userName}.
+          </h1>
+          <p className="mt-2 text-[#7b887f]">Tudo pronto para criar um convite inesquecível?</p>
+        </div>
+        <Link
+          to="/criar"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2f5145] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#2f5145]/15 transition hover:-translate-y-0.5 hover:bg-[#234237]"
+        >
+          <Plus size={17} /> Criar novo convite
+        </Link>
+      </div>
+      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        {[
+          [String(invitations.length), "Convites criados", "Seus projetos"],
+          [
+            String(invitations.filter((item) => item.status === "published").length),
+            "Publicados",
+            "Links ativos",
+          ],
+          ["—", "Confirmações", "Em breve"],
+        ].map(([value, label, hint]) => (
+          <div
+            key={label}
+            className="rounded-2xl border border-[#e4ebe4] bg-white p-5 shadow-[0_8px_24px_rgba(47,81,69,0.04)]"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-3xl font-semibold tracking-tight text-[#2f5145]">{value}</div>
+                <div className="mt-1 text-sm font-medium text-[#506258]">{label}</div>
+              </div>
+              <span className="rounded-lg bg-[#edf5ee] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#6a8270]">
+                {hint}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <section className="mt-8 rounded-2xl border border-[#e4ebe4] bg-white p-5 shadow-[0_8px_24px_rgba(47,81,69,0.04)] sm:p-7">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#bd8051]">
-              Área do contratante
-            </p>
-            <h1 className="mt-3 font-serif text-4xl tracking-tight text-[#2f5145]">
-              Olá, {userName}.
-            </h1>
-            <p className="mt-2 text-[#77736b]">Vamos criar algo especial?</p>
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#9aa69d]">
+              <Sparkles size={14} className="text-[#bd8051]" /> Seus convites
+            </div>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#33493d]">
+              Projetos recentes
+            </h2>
           </div>
           <Link
             to="/criar"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2f5145] px-5 py-3.5 text-sm font-medium text-white shadow-lg shadow-[#2f5145]/15 transition hover:-translate-y-0.5 hover:bg-[#234237]"
+            className="inline-flex items-center gap-2 self-start rounded-lg border border-[#d9e5da] px-3.5 py-2.5 text-xs font-semibold text-[#2f5145] transition hover:bg-[#f2f7f2]"
           >
-            <Plus size={17} /> Criar novo convite
+            Novo projeto <Plus size={14} />
           </Link>
         </div>
-        <section className="mt-12 rounded-3xl border border-[#e6e0d7] bg-white p-6 shadow-sm sm:p-8">
-          {invitations.length > 0 ? (
-            <div>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9b968c]">
-                    <Sparkles size={14} className="text-[#bd8051]" /> Seus convites
-                  </div>
-                  <h2 className="mt-3 font-serif text-3xl text-[#3c5145]">Seus rascunhos</h2>
-                </div>
-                <Link
-                  to="/criar"
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#d9e4da] px-4 py-3 text-sm font-medium text-[#2f5145]"
-                >
-                  Novo <Plus size={15} />
-                </Link>
-              </div>
-              <div className="mt-6 divide-y divide-[#eeeae3]">
-                {invitations.map((invitation) => (
-                  <div
-                    key={invitation.id}
-                    className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <div className="font-medium text-[#3f5146]">
-                        {invitation.title || invitation.event_type}
-                      </div>
-                      <div className="mt-1 text-xs uppercase tracking-wider text-[#9b968c]">
-                        {invitation.status === "draft" ? "Rascunho" : invitation.status}
-                      </div>
+        {invitations.length > 0 ? (
+          <div className="mt-6 grid gap-3 md:grid-cols-2">
+            {invitations.map((invitation) => (
+              <div
+                key={invitation.id}
+                className="group rounded-xl border border-[#edf1ed] bg-[#fbfcfb] p-4 transition hover:border-[#cbdccc] hover:bg-white hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold text-[#3f5146]">
+                      {invitation.title || invitation.event_type}
                     </div>
-                    <Link
-                      to="/painel/$invitationId/rsvp"
-                      params={{ invitationId: invitation.id }}
-                      className="inline-flex items-center gap-2 self-start rounded-xl border border-[#d9e4da] px-4 py-2.5 text-sm font-medium text-[#2f5145]"
-                    >
-                      Ver RSVP <ArrowRight size={15} />
-                    </Link>
+                    <div className="mt-2 flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#98a39b]">
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${invitation.status === "published" ? "bg-[#6c9476]" : "bg-[#d1a06e]"}`}
+                      />
+                      {invitation.status === "draft" ? "Rascunho" : invitation.status}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
-                <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9b968c]">
-                    <Sparkles size={14} className="text-[#bd8051]" /> Seus convites
-                  </div>
-                  <h2 className="mt-3 font-serif text-3xl text-[#3c5145]">
-                    Ainda não há convites.
-                  </h2>
-                  <p className="mt-2 max-w-md text-sm leading-6 text-[#77736b]">
-                    Comece escolhendo um modelo e transforme os detalhes do seu evento em uma
-                    experiência inesquecível.
-                  </p>
+                  <span className="rounded-lg bg-white px-2 py-1 text-[10px] text-[#98a39b]">
+                    {new Date(invitation.updated_at).toLocaleDateString("pt-BR")}
+                  </span>
                 </div>
-                <Link
-                  to="/criar"
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#d9e4da] px-4 py-3 text-sm font-medium text-[#2f5145] transition hover:bg-[#f1f6f1]"
-                >
-                  Começar agora <ArrowRight size={16} />
-                </Link>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Link
+                    to="/criar"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#eaf2eb] px-3 py-2 text-xs font-semibold text-[#2f5145]"
+                  >
+                    Editar convite <ArrowRight size={14} />
+                  </Link>
+                  <Link
+                    to="/painel/$invitationId/rsvp"
+                    params={{ invitationId: invitation.id }}
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#63736a]"
+                  >
+                    Ver RSVP
+                  </Link>
+                </div>
               </div>
-            </>
-          )}
-        </section>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {[
-            [String(invitations.length), "Convites criados"],
-            [
-              String(invitations.filter((item) => item.status === "published").length),
-              "Publicados",
-            ],
-            ["—", "Confirmações"],
-          ].map(([value, label]) => (
-            <div key={label} className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
-              <div className="font-serif text-3xl text-[#2f5145]">{value}</div>
-              <div className="mt-1 text-sm text-[#89857e]">{label}</div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-xl border border-dashed border-[#d7e2d8] bg-[#f9fbf9] px-5 py-10 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf2eb] text-[#2f5145]">
+              <Sparkles size={20} />
             </div>
-          ))}
+            <h3 className="mt-4 font-semibold text-[#3f5146]">Seu primeiro convite começa aqui</h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#7b887f]">
+              Escolha um modelo, adicione seus detalhes e publique um link pronto para compartilhar.
+            </p>
+            <Link
+              to="/criar"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#2f5145] px-4 py-3 text-xs font-semibold text-white"
+            >
+              Começar agora <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
+      </section>
+      <div className="mt-5 grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
+        <div className="rounded-2xl bg-[#2f5145] p-6 text-white shadow-lg shadow-[#2f5145]/10">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#e8b58b]">
+                Seu próximo passo
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+                Deixe seu convite com a sua cara.
+              </h2>
+              <p className="mt-2 max-w-md text-sm leading-6 text-white/65">
+                Fotos, música, mapa, confirmação de presença e tudo que seus convidados precisam.
+              </p>
+            </div>
+            <Upload className="hidden text-[#e8b58b] sm:block" size={28} strokeWidth={1.5} />
+          </div>
+          <Link
+            to="/criar"
+            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-3 text-xs font-semibold text-[#2f5145]"
+          >
+            Personalizar agora <ArrowRight size={14} />
+          </Link>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowHowWorks(true)}
+          className="rounded-2xl border border-[#e4ebe4] bg-white p-6 text-left shadow-[0_8px_24px_rgba(47,81,69,0.04)] transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <CircleHelp className="text-[#bd8051]" size={22} />
+          <h3 className="mt-4 font-semibold text-[#3f5146]">Como funciona?</h3>
+          <p className="mt-2 text-sm leading-6 text-[#7b887f]">
+            Veja o passo a passo completo para criar e compartilhar.
+          </p>
+          <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#2f5145]">
+            Abrir guia <ArrowRight size={13} />
+          </span>
+        </button>
       </div>
-    </main>
+    </DashboardShell>
   );
 }
 
