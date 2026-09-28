@@ -176,7 +176,7 @@ function GuestsPage() {
                 </button>
                 {g.whatsapp && (
                   <button
-                    onClick={() => sendWhatsapp(g, g.status === "pending" && false)}
+                    onClick={() => sendWhatsapp(g, false)}
                     className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"
                   >
                     <MessageCircle size={14} /> Enviar convite
