@@ -398,6 +398,22 @@ function EventStep({
   );
 }
 function MessageStep({ draft, update }: EditorProps) {
+  const titleSuggestions = [
+    "Um dia para celebrar",
+    "Nosso momento especial",
+    "Vamos comemorar juntos",
+  ];
+  const phraseSuggestions = [
+    "Um dia para lembrar",
+    "Uma nova história começa",
+    "O amor está no ar",
+  ];
+  const messageSuggestions = [
+    "Será uma alegria ter você conosco para celebrar este momento tão especial.",
+    "Preparamos tudo com muito carinho e esperamos compartilhar esse dia inesquecível com você.",
+    "Sua presença tornará nossa celebração ainda mais completa. Venha comemorar conosco!",
+  ];
+  const dressCodeSuggestions = ["Esporte fino", "Traje social", "Traje casual", "Livre"];
   return (
     <>
       <Heading
@@ -412,6 +428,10 @@ function MessageStep({ draft, update }: EditorProps) {
             onChange={(value) => update("title", value)}
             placeholder="Ex.: Marina & Daniel"
           />
+          <PresetChips
+            suggestions={titleSuggestions}
+            onSelect={(value) => update("title", value)}
+          />
         </Field>
         <Field label="Frase de abertura">
           <Input
@@ -419,12 +439,20 @@ function MessageStep({ draft, update }: EditorProps) {
             onChange={(value) => update("phrase", value)}
             placeholder="Ex.: Um dia para lembrar"
           />
+          <PresetChips
+            suggestions={phraseSuggestions}
+            onSelect={(value) => update("phrase", value)}
+          />
         </Field>
         <Field label="Mensagem especial">
           <Textarea
             value={draft.description}
             onChange={(value) => update("description", value)}
             placeholder="Escreva uma mensagem carinhosa para seus convidados..."
+          />
+          <PresetChips
+            suggestions={messageSuggestions}
+            onSelect={(value) => update("description", value)}
           />
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -449,9 +477,40 @@ function MessageStep({ draft, update }: EditorProps) {
             onChange={(value) => update("dressCode", value)}
             placeholder="Ex.: Esporte fino"
           />
+          <PresetChips
+            suggestions={dressCodeSuggestions}
+            onSelect={(value) => update("dressCode", value)}
+          />
         </Field>
       </div>
     </>
+  );
+}
+function PresetChips({
+  suggestions,
+  onSelect,
+}: {
+  suggestions: string[];
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <div className="mt-2.5">
+      <p className="mb-2 text-[11px] font-medium text-[#9d9d96]">
+        Não sabe o que escrever? Escolha uma sugestão:
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {suggestions.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => onSelect(suggestion)}
+            className="rounded-full border border-[#e8e8e3] bg-white px-3 py-2 text-left text-xs text-[#777a74] transition hover:border-[#d6c0b3] hover:bg-[#f8eee9] hover:text-[#7f4e40]"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 function MediaStep({ draft, update, userId }: EditorProps) {
