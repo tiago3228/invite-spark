@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type RSVPMode = "native" | "google_forms" | "whatsapp" | "none";
+export type AnimationStyle = "envelope" | "floral" | "celebrate" | "minimal";
 
 export type InvitationDraft = {
   id?: string;
@@ -24,6 +25,7 @@ export type InvitationDraft = {
   videoUrl: string;
   audioUrl: string;
   themeName: string;
+  animationStyle: AnimationStyle;
   rsvpMode: RSVPMode;
   rsvpWhatsapp: string;
   rsvpMessage: string;
@@ -51,6 +53,7 @@ export const emptyDraft: InvitationDraft = {
   videoUrl: "",
   audioUrl: "",
   themeName: "Jardim",
+  animationStyle: "envelope",
   rsvpMode: "native",
   rsvpWhatsapp: "",
   rsvpMessage: "Olá! Sou [NOME] e gostaria de confirmar minha presença.",
@@ -81,6 +84,7 @@ function toRow(draft: InvitationDraft, userId: string) {
         videoUrl: draft.videoUrl,
         audioUrl: draft.audioUrl,
       },
+      animationStyle: draft.animationStyle,
       countdown: draft.showCountdown,
     },
     location: {

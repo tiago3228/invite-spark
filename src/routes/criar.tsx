@@ -21,6 +21,7 @@ import {
   type InvitationDraft,
   type RSVPMode,
 } from "@/lib/invitation";
+import type { AnimationStyle } from "@/lib/invitation";
 
 export const Route = createFileRoute("/criar")({
   component: CreateInvitation,
@@ -48,6 +49,33 @@ const themes = [
   },
   { name: "Celebre", description: "Festa vibrante", className: "theme-celebrate", premium: true },
 ];
+const animationStyles: { id: AnimationStyle; name: string; description: string; sample: string }[] =
+  [
+    {
+      id: "envelope",
+      name: "Envelope premium",
+      description: "Clássico, elegante e cinematográfico",
+      sample: "bg-[#6e4536]",
+    },
+    {
+      id: "floral",
+      name: "Floral romântico",
+      description: "Delicado, claro e cheio de flores",
+      sample: "bg-[#a56f72]",
+    },
+    {
+      id: "celebrate",
+      name: "Festa com brilho",
+      description: "Vibrante, festivo e marcante",
+      sample: "bg-[#bd8051]",
+    },
+    {
+      id: "minimal",
+      name: "Minimalista",
+      description: "Limpo, moderno e sofisticado",
+      sample: "bg-[#52645b]",
+    },
+  ];
 const steps = ["Evento e modelo", "Texto", "Fotos e mídia", "Local", "Confirmação", "Prévia"];
 
 function CreateInvitation() {
@@ -416,6 +444,37 @@ function EventStep({
             </button>
           </div>
         )}
+        <div className="mt-10">
+          <p className="mb-1 text-sm font-medium text-[#4e4a43]">Estilo de abertura</p>
+          <p className="mb-4 text-sm text-[#777a74]">
+            Escolha como seu convite vai receber os convidados.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {animationStyles.map((style) => (
+              <button
+                key={style.id}
+                type="button"
+                onClick={() => update("animationStyle", style.id)}
+                className={`flex items-center gap-4 rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 ${draft.animationStyle === style.id ? "border-[#2c302d] bg-[#f3ebe5] ring-2 ring-[#ead9cf]" : "border-[#e8e8e3] bg-white"}`}
+              >
+                <span
+                  className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl text-xs font-semibold text-white ${style.sample}`}
+                >
+                  Abrir
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-medium text-[#3f5146]">{style.name}</span>
+                  <span className="mt-1 block text-xs leading-5 text-[#89857e]">
+                    {style.description}
+                  </span>
+                </span>
+                {draft.animationStyle === style.id && (
+                  <Check size={17} className="ml-auto shrink-0 text-[#2c302d]" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </>
   );

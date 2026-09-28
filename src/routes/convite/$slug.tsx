@@ -83,6 +83,7 @@ function PublicInvitation() {
       <OpeningOverlay
         title={invitation.title || invitation.event_type}
         coverUrl={coverUrl}
+        animationStyle={content["animationStyle"] || "envelope"}
         opened={opened}
         onOpen={handleOpen}
       />
@@ -224,16 +225,21 @@ function PublicInvitation() {
 function OpeningOverlay({
   title,
   coverUrl,
+  animationStyle,
   opened,
   onOpen,
 }: {
   title: string;
   coverUrl?: string | undefined;
+  animationStyle: string;
   opened: boolean;
   onOpen: () => void;
 }) {
   return (
-    <div className={`invite-opening ${opened ? "is-opening" : ""}`} aria-hidden={opened}>
+    <div
+      className={`invite-opening style-${animationStyle} ${opened ? "is-opening" : ""}`}
+      aria-hidden={opened}
+    >
       <div
         className="invite-opening-backdrop"
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}

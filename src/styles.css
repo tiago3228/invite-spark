@@ -207,6 +207,75 @@
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
+.invite-opening.style-floral {
+  background: #4e3037;
+}
+.invite-opening.style-floral .invite-opening-shade {
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(140, 82, 90, 0.18),
+    rgba(39, 21, 26, 0.86) 78%
+  );
+}
+.invite-opening.style-floral .invite-envelope {
+  border-radius: 42% 42% 18px 18px;
+  background: linear-gradient(145deg, #c48e91, #754b59);
+}
+.invite-opening.style-floral .invite-envelope::before {
+  background: linear-gradient(145deg, rgba(255, 239, 237, 0.3), transparent 62%);
+}
+.invite-opening.style-floral .invite-opening-button {
+  border-color: rgba(255, 218, 215, 0.6);
+}
+.invite-opening.style-celebrate {
+  background: #321d25;
+}
+.invite-opening.style-celebrate .invite-opening-shade {
+  background: radial-gradient(
+    circle at 50% 35%,
+    rgba(224, 119, 62, 0.3),
+    rgba(36, 16, 27, 0.86) 74%
+  );
+}
+.invite-opening.style-celebrate .invite-envelope {
+  border: 2px solid rgba(255, 220, 135, 0.58);
+  background: linear-gradient(145deg, #db8c4f, #9d3e55);
+  box-shadow:
+    0 30px 90px rgba(240, 112, 52, 0.3),
+    inset 0 0 0 10px rgba(255, 235, 176, 0.1);
+}
+.invite-opening.style-celebrate .invite-envelope-card {
+  background: #fff4d8;
+}
+.invite-opening.style-celebrate .invite-opening-button {
+  border-color: rgba(255, 224, 148, 0.7);
+}
+.invite-opening.style-minimal {
+  background: #3d4941;
+}
+.invite-opening.style-minimal .invite-opening-shade {
+  background: linear-gradient(180deg, rgba(24, 35, 29, 0.28), rgba(24, 35, 29, 0.9));
+}
+.invite-opening.style-minimal .invite-envelope {
+  border-radius: 8px;
+  border-color: rgba(255, 255, 255, 0.24);
+  background: #d7d1c5;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+}
+.invite-opening.style-minimal .invite-envelope-card {
+  border-radius: 4px;
+  background: #f6f2e9;
+  box-shadow: none;
+}
+.invite-opening.style-minimal .invite-opening-title {
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+.invite-opening.style-minimal .invite-opening-button {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.16);
+}
 .music-fab {
   position: fixed;
   right: 18px;
