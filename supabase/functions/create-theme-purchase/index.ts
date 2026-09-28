@@ -18,6 +18,14 @@ Deno.serve(async (request) => {
     if (userError || !user) return json({ error: "Authentication required" }, 401);
 
     const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
+    const { data: masterRole } = await admin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (masterRole) return json({ alreadyUnlocked: true, checkoutUrl: null, masterAdmin: true });
+
     const { data: existing } = await admin
       .from("theme_purchases")
       .select("id, status")

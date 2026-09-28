@@ -4,6 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 const db = supabase as any;
 
 export async function hasPremiumThemes(userId: string) {
+  const { data: isMasterAdmin, error: roleError } = await supabase.rpc("is_master_admin", {
+    _user_id: userId,
+  });
+  if (!roleError && isMasterAdmin) return true;
+
   const { data, error } = await db
     .from("theme_purchases")
     .select("id")
