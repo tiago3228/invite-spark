@@ -14,16 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invitations: {
+        Row: {
+          content: Json
+          created_at: string
+          custom_event_type: string | null
+          event_date: string | null
+          event_end_time: string | null
+          event_time: string | null
+          event_type: string
+          id: string
+          location: Json
+          pix_config: Json
+          published_at: string | null
+          rsvp_config: Json
+          slug: string | null
+          status: string
+          theme_id: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          custom_event_type?: string | null
+          event_date?: string | null
+          event_end_time?: string | null
+          event_time?: string | null
+          event_type: string
+          id?: string
+          location?: Json
+          pix_config?: Json
+          published_at?: string | null
+          rsvp_config?: Json
+          slug?: string | null
+          status?: string
+          theme_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          custom_event_type?: string | null
+          event_date?: string | null
+          event_end_time?: string | null
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          location?: Json
+          pix_config?: Json
+          published_at?: string | null
+          rsvp_config?: Json
+          slug?: string | null
+          status?: string
+          theme_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      themes: {
+        Row: {
+          active: boolean
+          category: string
+          configuration: Json
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          preview_image: string | null
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          configuration?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          preview_image?: string | null
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          configuration?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          preview_image?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "customer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +308,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "customer"],
+    },
   },
 } as const
