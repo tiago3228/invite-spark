@@ -9,6 +9,7 @@ export type OpeningSound = "none" | "paper" | "chime";
 
 export type InvitationDraft = {
   id?: string;
+  slug?: string;
   userId?: string;
   eventType: string;
   customEventType: string;
@@ -151,13 +152,14 @@ export async function publishInvitation(draft: InvitationDraft, userId: string) 
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "") || "meu-convite";
   const slug = `${base}-${draft.id.slice(0, 8)}`;
+  const stableSlug = draft.slug || slug;
   const { error } = await db
     .from("invitations")
-    .update({ slug, status: "published", published_at: new Date().toISOString() })
+    .update({ slug: stableSlug, status: "published", published_at: new Date().toISOString() })
     .eq("id", draft.id)
     .eq("user_id", userId);
   if (error) throw error;
-  return slug;
+  return stableSlug;
 }
 
 export async function loadInvitation(id: string, userId: string): Promise<InvitationDraft | null> {
@@ -176,6 +178,7 @@ export async function loadInvitation(id: string, userId: string): Promise<Invita
   return {
     ...emptyDraft,
     id: data.id,
+    slug: data.slug ?? undefined,
     userId: data.user_id,
     eventType: data.event_type ?? "",
     customEventType: data.custom_event_type ?? "",

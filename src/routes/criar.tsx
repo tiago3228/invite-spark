@@ -20,8 +20,10 @@ import {
 import { hasPremiumThemes, startPremiumThemePurchase } from "@/lib/billing";
 import { removeInvitationFile, uploadInvitationFile, type UploadKind } from "@/lib/storage";
 import { playOpeningSound } from "@/lib/opening-sound";
+import { generateInvitationCopy } from "@/lib/ai-copy";
 import {
   emptyDraft,
+  loadInvitation,
   publishInvitation,
   saveInvitationDraft,
   type InvitationDraft,
@@ -124,6 +126,7 @@ function CreateInvitation() {
   const [step, setStep] = useState(1);
   const [draft, setDraft] = useState<InvitationDraft>(emptyDraft);
   const [userId, setUserId] = useState<string>();
+  const [loadingDraft, setLoadingDraft] = useState(true);
   const [saveState, setSaveState] = useState("Rascunho local");
   const [error, setError] = useState("");
   const [publishing, setPublishing] = useState(false);
@@ -132,19 +135,37 @@ function CreateInvitation() {
 
   useEffect(() => {
     let active = true;
-    void supabase.auth.getSession().then(({ data }) => {
-      if (active) {
-        setUserId(data.session?.user.id);
-        if (data.session?.user.id)
-          void hasPremiumThemes(data.session.user.id).then(setPremiumUnlocked);
+    async function loadEditor() {
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+      const sessionUserId = data.session?.user.id;
+      if (!sessionUserId) {
+        setLoadingDraft(false);
+        return;
       }
-    });
+      setUserId(sessionUserId);
+      void hasPremiumThemes(sessionUserId).then(setPremiumUnlocked);
+      const invitationId = new URLSearchParams(window.location.search).get("invitationId");
+      if (invitationId) {
+        setSaveState("Carregando convite…");
+        try {
+          const savedDraft = await loadInvitation(invitationId, sessionUserId);
+          if (active && savedDraft) setDraft(savedDraft);
+          else if (active) setError("Não foi possível encontrar este convite para edição.");
+        } catch {
+          if (active) setError("Não foi possível carregar o convite salvo.");
+        }
+      }
+      if (active) setLoadingDraft(false);
+    }
+    void loadEditor();
     return () => {
       active = false;
     };
   }, []);
 
   useEffect(() => {
+    if (loadingDraft) return;
     const draftTimer = window.setTimeout(() => {
       localStorage.setItem("meu-convite-draft", JSON.stringify(draft));
       if (!userId || !draft.eventType) return;
@@ -157,7 +178,7 @@ function CreateInvitation() {
         .catch(() => setSaveState("Salvo neste dispositivo"));
     }, 800);
     return () => window.clearTimeout(draftTimer);
-  }, [draft, userId]);
+  }, [draft, loadingDraft, userId]);
 
   function update<K extends keyof InvitationDraft>(key: K, value: InvitationDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -226,6 +247,14 @@ function CreateInvitation() {
     () => (step === 1 ? Boolean(draft.eventType && draft.themeName) : true),
     [draft.eventType, draft.themeName, step],
   );
+
+  if (loadingDraft)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8f8f6] text-[#2c302d]">
+        <Loader2 className="animate-spin" />
+        <span className="ml-3 text-sm">Carregando seu convite…</span>
+      </div>
+    );
 
   return (
     <main className="min-h-screen bg-[#f8f8f6] text-[#232522]">
@@ -616,6 +645,8 @@ function EventStep({
   );
 }
 function MessageStep({ draft, update }: EditorProps) {
+  const [generatingCopy, setGeneratingCopy] = useState(false);
+  const [copyError, setCopyError] = useState("");
   const titleSuggestions = [
     "Um dia para celebrar",
     "Nosso momento especial",
@@ -632,6 +663,28 @@ function MessageStep({ draft, update }: EditorProps) {
     "Sua presença tornará nossa celebração ainda mais completa. Venha comemorar conosco!",
   ];
   const dressCodeSuggestions = ["Esporte fino", "Traje social", "Traje casual", "Livre"];
+  async function generateCopy() {
+    setGeneratingCopy(true);
+    setCopyError("");
+    try {
+      const copy = await generateInvitationCopy({
+        eventType: draft.eventType || draft.customEventType || "celebração",
+        name: draft.openingName || draft.title,
+        style: draft.themeName,
+        animationStyle: draft.animationStyle,
+        eventDate: draft.eventDate,
+        venueName: draft.venueName,
+        tone: "emocionante e acolhedor",
+      });
+      update("title", copy.title);
+      update("phrase", copy.phrase);
+      update("description", copy.message);
+    } catch (error) {
+      setCopyError(error instanceof Error ? error.message : "Não foi possível gerar o texto.");
+    } finally {
+      setGeneratingCopy(false);
+    }
+  }
   return (
     <>
       <Heading
@@ -639,6 +692,31 @@ function MessageStep({ draft, update }: EditorProps) {
         title="Dê voz ao seu convite."
         text="Escreva os detalhes que seus convidados precisam saber e o sentimento que você quer transmitir."
       />
+      <div className="mt-7 rounded-2xl border border-[#ead9cf] bg-gradient-to-br from-[#fffaf5] to-[#f7eee8] p-5">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="text-sm font-semibold text-[#5f4734]">Não sabe o que escrever?</p>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-[#856f5d]">
+              A IA cria um título, uma frase e uma mensagem com base no seu evento e no estilo
+              escolhido. Você poderá editar tudo depois.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void generateCopy()}
+            disabled={generatingCopy}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2c302d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1d211f] disabled:opacity-60"
+          >
+            {generatingCopy ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Sparkles size={16} />
+            )}
+            {generatingCopy ? "Criando texto…" : "Criar com IA"}
+          </button>
+        </div>
+        {copyError && <p className="mt-3 text-xs text-[#a45f4e]">{copyError}</p>}
+      </div>
       <div className="mt-9 grid gap-5">
         <Field label="Título do convite">
           <Input

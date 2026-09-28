@@ -230,12 +230,12 @@ function Dashboard() {
                   </span>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2">
-                  <Link
-                    to="/criar"
+                  <a
+                    href={`/criar?invitationId=${encodeURIComponent(invitation.id)}`}
                     className="inline-flex items-center gap-2 rounded-lg bg-[#f3ebe5] px-3 py-2 text-xs font-semibold text-[#2c302d]"
                   >
                     Editar convite <ArrowRight size={14} />
-                  </Link>
+                  </a>
                   <Link
                     to="/painel/$invitationId/rsvp"
                     params={{ invitationId: invitation.id }}
