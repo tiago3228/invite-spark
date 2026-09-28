@@ -243,6 +243,13 @@ function Dashboard() {
                   >
                     Ver RSVP
                   </Link>
+                  <Link
+                    to="/painel/$invitationId/convidados"
+                    params={{ invitationId: invitation.id }}
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#2f5145] px-3 py-2 text-xs font-semibold text-white"
+                  >
+                    Convidados e links
+                  </Link>
                 </div>
               </div>
             ))}
