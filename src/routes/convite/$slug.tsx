@@ -13,16 +13,29 @@ import {
 } from "lucide-react";
 import { findPublishedInvitation } from "@/lib/rsvp";
 import { playOpeningSound, type OpeningSound } from "@/lib/opening-sound";
+import { QuinzeInvite } from "@/components/QuinzeInvite";
 
 export const Route = createFileRoute("/convite/$slug")({
   component: PublicInvitation,
+  validateSearch: (s: Record<string, unknown>): { g?: string | undefined } => ({
+    g: typeof s["g"] === "string" ? (s["g"] as string) : undefined,
+  }),
   head: () => ({
-    meta: [{ title: "Convite | Meu Convite" }, { name: "robots", content: "noindex, nofollow" }],
+    meta: [
+      { title: "Você está convidado | Meu Convite" },
+      { name: "description", content: "Abra seu convite e confirme sua presença." },
+      { property: "og:title", content: "Você está convidado" },
+      { property: "og:description", content: "Abra seu convite e confirme sua presença." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
   }),
 });
 
 function PublicInvitation() {
   const { slug } = Route.useParams();
+  const { g } = Route.useSearch();
   const [invitation, setInvitation] = useState<any>();
   const [error, setError] = useState("");
   const [opened, setOpened] = useState(false);
@@ -56,6 +69,8 @@ function PublicInvitation() {
       </div>
     );
   const content = (invitation.content ?? {}) as Record<string, any>;
+  if (content["template"] === "quinze-piscina" || invitation.event_type === "15 anos")
+    return <QuinzeInvite invitation={invitation} token={g} />;
   const location = (invitation.location ?? {}) as Record<string, any>;
   const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
   const openingName = String(content["openingName"] || "").trim();

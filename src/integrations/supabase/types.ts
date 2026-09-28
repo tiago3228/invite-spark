@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      guests: {
+        Row: {
+          companions: number
+          created_at: string
+          id: string
+          invitation_id: string
+          name: string
+          reminded_at: string | null
+          responded_at: string | null
+          status: string
+          token: string
+          whatsapp: string
+        }
+        Insert: {
+          companions?: number
+          created_at?: string
+          id?: string
+          invitation_id: string
+          name: string
+          reminded_at?: string | null
+          responded_at?: string | null
+          status?: string
+          token?: string
+          whatsapp?: string
+        }
+        Update: {
+          companions?: number
+          created_at?: string
+          id?: string
+          invitation_id?: string
+          name?: string
+          reminded_at?: string | null
+          responded_at?: string | null
+          status?: string
+          token?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guests_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitation_media: {
         Row: {
           created_at: string
@@ -337,6 +384,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_guest_by_token: {
+        Args: { _token: string }
+        Returns: {
+          companions: number
+          name: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -345,6 +400,10 @@ export type Database = {
         Returns: boolean
       }
       is_master_admin: { Args: { _user_id: string }; Returns: boolean }
+      respond_guest: {
+        Args: { _companions: number; _status: string; _token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "customer"
