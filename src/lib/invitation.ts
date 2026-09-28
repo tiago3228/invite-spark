@@ -119,6 +119,25 @@ export async function saveInvitationDraft(draft: InvitationDraft, userId: string
   return draft.id;
 }
 
+export async function publishInvitation(draft: InvitationDraft, userId: string) {
+  if (!draft.id) throw new Error("Salve o convite antes de publicar.");
+  const base =
+    (draft.title || draft.eventType || "meu-convite")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "meu-convite";
+  const slug = `${base}-${draft.id.slice(0, 8)}`;
+  const { error } = await db
+    .from("invitations")
+    .update({ slug, status: "published", published_at: new Date().toISOString() })
+    .eq("id", draft.id)
+    .eq("user_id", userId);
+  if (error) throw error;
+  return slug;
+}
+
 export async function loadInvitation(id: string, userId: string): Promise<InvitationDraft | null> {
   const { data, error } = await db
     .from("invitations")

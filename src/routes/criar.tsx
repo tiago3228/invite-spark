@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import {
   emptyDraft,
+  publishInvitation,
   saveInvitationDraft,
   type InvitationDraft,
   type RSVPMode,
@@ -48,6 +49,7 @@ function CreateInvitation() {
   const [userId, setUserId] = useState<string>();
   const [saveState, setSaveState] = useState("Rascunho local");
   const [error, setError] = useState("");
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +83,26 @@ function CreateInvitation() {
     setError("");
     if (step < steps.length) setStep((current) => current + 1);
     else if (draft.id) void navigate({ to: "/painel" });
+  }
+  async function publish() {
+    if (!userId || !draft.id) {
+      setError("Aguarde o salvamento automático antes de publicar.");
+      return;
+    }
+    setPublishing(true);
+    setError("");
+    try {
+      const slug = await publishInvitation(draft, userId);
+      await navigate({ to: "/convite/$slug", params: { slug } });
+    } catch (publishError) {
+      setError(
+        publishError instanceof Error
+          ? publishError.message
+          : "Não foi possível publicar o convite.",
+      );
+    } finally {
+      setPublishing(false);
+    }
   }
   function back() {
     if (step > 1) setStep((current) => current - 1);
@@ -139,7 +161,17 @@ function CreateInvitation() {
           </section>
           <PreviewCard draft={draft} />
         </div>
-        <div className="mt-10 flex justify-end">
+        <div className="mt-10 flex flex-col justify-end gap-3 sm:flex-row">
+          {step === steps.length && (
+            <button
+              onClick={() => void publish()}
+              disabled={publishing || !draft.id}
+              className="inline-flex items-center justify-center gap-3 rounded-full border border-[#2f5145] px-6 py-3.5 font-medium text-[#2f5145] transition hover:bg-[#eaf2eb] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {publishing ? "Publicando…" : "Publicar convite"}
+              <Sparkles size={17} />
+            </button>
+          )}
           <button
             onClick={next}
             disabled={!canContinue}
