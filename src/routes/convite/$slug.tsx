@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronRight, Flower2, MapPin, Music2, Play, Sparkles } from "lucide-react";
 import { findPublishedInvitation } from "@/lib/rsvp";
 
@@ -52,6 +52,7 @@ function PublicInvitation() {
       <OpeningOverlay
         title={invitation.title || invitation.event_type}
         coverUrl={coverUrl}
+        audioUrl={content["media"]?.["audioUrl"] as string | undefined}
         opened={opened}
         onOpen={() => setOpened(true)}
       />
@@ -181,14 +182,21 @@ function PublicInvitation() {
 function OpeningOverlay({
   title,
   coverUrl,
+  audioUrl,
   opened,
   onOpen,
 }: {
   title: string;
   coverUrl?: string | undefined;
+  audioUrl?: string | undefined;
   opened: boolean;
   onOpen: () => void;
 }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  function openInvitation() {
+    void audioRef.current?.play().catch(() => undefined);
+    onOpen();
+  }
   return (
     <div className={`invite-opening ${opened ? "is-opening" : ""}`} aria-hidden={opened}>
       <div
@@ -196,6 +204,7 @@ function OpeningOverlay({
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
       />
       <div className="invite-opening-shade" />
+      {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
       <div className="invite-opening-content">
         <p className="invite-opening-kicker">Você está convidado</p>
         <div className="invite-envelope mt-6">
@@ -207,7 +216,7 @@ function OpeningOverlay({
             </div>
           </div>
         </div>
-        <button type="button" className="invite-opening-button" onClick={onOpen}>
+        <button type="button" className="invite-opening-button" onClick={openInvitation}>
           Clique para abrir
         </button>
       </div>
