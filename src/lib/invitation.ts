@@ -13,6 +13,7 @@ export type InvitationDraft = {
   eventType: string;
   customEventType: string;
   title: string;
+  openingName: string;
   phrase: string;
   description: string;
   eventDate: string;
@@ -45,6 +46,7 @@ export const emptyDraft: InvitationDraft = {
   eventType: "",
   customEventType: "",
   title: "",
+  openingName: "",
   phrase: "",
   description: "",
   eventDate: "",
@@ -87,6 +89,7 @@ function toRow(draft: InvitationDraft, userId: string) {
     status: draft.status ?? "draft",
     content: {
       phrase: draft.phrase,
+      openingName: draft.openingName,
       description: draft.description,
       dressCode: draft.dressCode,
       media: {
@@ -177,6 +180,7 @@ export async function loadInvitation(id: string, userId: string): Promise<Invita
     eventType: data.event_type ?? "",
     customEventType: data.custom_event_type ?? "",
     title: data.title ?? "",
+    openingName: content["openingName"] ?? "",
     eventDate: data.event_date ?? "",
     eventTime: data.event_time ?? "",
     eventEndTime: data.event_end_time ?? "",

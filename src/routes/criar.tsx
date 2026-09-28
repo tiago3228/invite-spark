@@ -651,6 +651,16 @@ function MessageStep({ draft, update }: EditorProps) {
             onSelect={(value) => update("title", value)}
           />
         </Field>
+        <Field
+          label="Nome da aniversariante"
+          hint="Este nome aparecerá automaticamente sobre a fumaça rosa do vídeo de abertura."
+        >
+          <Input
+            value={draft.openingName}
+            onChange={(value) => update("openingName", value)}
+            placeholder="Ex.: Maria Clara"
+          />
+        </Field>
         <Field label="Frase de abertura">
           <Input
             value={draft.phrase}

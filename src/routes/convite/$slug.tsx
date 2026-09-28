@@ -58,6 +58,7 @@ function PublicInvitation() {
   const content = (invitation.content ?? {}) as Record<string, any>;
   const location = (invitation.location ?? {}) as Record<string, any>;
   const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
+  const openingName = String(content["openingName"] || "").trim();
   const coverUrl = content["media"]?.["coverUrl"] as string | undefined;
   const audioUrl = content["media"]?.["audioUrl"] as string | undefined;
   const openingSound = (content["openingSound"] || "paper") as OpeningSound;
@@ -170,12 +171,22 @@ function PublicInvitation() {
               <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
                 <Play className="text-[#bd8051]" size={19} />
                 <h2 className="mt-4 font-medium text-[#3f5146]">Um vídeo para você</h2>
-                <video
-                  controls
-                  preload="metadata"
-                  className="mt-4 aspect-video w-full rounded-xl bg-[#232522]"
-                  src={content["media"]["videoUrl"]}
-                />
+                <div className="opening-video-frame mt-4">
+                  <video
+                    controls
+                    preload="metadata"
+                    className="opening-video-media aspect-video w-full rounded-xl bg-[#232522]"
+                    src={content["media"]["videoUrl"]}
+                  />
+                  {openingName && (
+                    <div
+                      className="opening-video-name"
+                      aria-label={`Nome da aniversariante: ${openingName}`}
+                    >
+                      {openingName}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             {content["media"]?.["audioUrl"] && (
