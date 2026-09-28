@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { removeInvitationFile, uploadInvitationFile, type UploadKind } from "@/lib/storage";
 import {
   emptyDraft,
   publishInvitation,
@@ -154,7 +155,7 @@ function CreateInvitation() {
           <section className="min-w-0">
             {step === 1 && <EventStep draft={draft} update={update} />}
             {step === 2 && <MessageStep draft={draft} update={update} />}
-            {step === 3 && <MediaStep draft={draft} update={update} />}
+            {step === 3 && <MediaStep draft={draft} update={update} userId={userId} />}
             {step === 4 && <LocationStep draft={draft} update={update} />}
             {step === 5 && <RsvpStep draft={draft} update={update} />}
             {step === 6 && <PreviewStep draft={draft} />}
@@ -192,6 +193,7 @@ function CreateInvitation() {
 
 type EditorProps = {
   draft: InvitationDraft;
+  userId?: string | undefined;
   update: <K extends keyof InvitationDraft>(key: K, value: InvitationDraft[K]) => void;
 };
 function Field({
@@ -386,51 +388,191 @@ function MessageStep({ draft, update }: EditorProps) {
     </>
   );
 }
-function MediaStep({ draft, update }: EditorProps) {
+function MediaStep({ draft, update, userId }: EditorProps) {
+  const [uploading, setUploading] = useState<UploadKind | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  async function upload(file: File, kind: UploadKind) {
+    if (!userId || !draft.id) {
+      setUploadError("Aguarde o primeiro salvamento automático do convite.");
+      return;
+    }
+    setUploading(kind);
+    setUploadError("");
+    try {
+      const { url } = await uploadInvitationFile(file, userId, draft.id, kind);
+      if (kind === "cover") update("coverUrl", url);
+      else if (kind === "image") update("galleryUrls", [...draft.galleryUrls, url]);
+      else if (kind === "video") update("videoUrl", url);
+      else update("audioUrl", url);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Não foi possível enviar o arquivo.");
+    } finally {
+      setUploading(null);
+    }
+  }
+  async function remove(url: string, kind: UploadKind) {
+    try {
+      await removeInvitationFile(url);
+      if (kind === "cover") update("coverUrl", "");
+      else if (kind === "image")
+        update(
+          "galleryUrls",
+          draft.galleryUrls.filter((item) => item !== url),
+        );
+      else if (kind === "video") update("videoUrl", "");
+      else update("audioUrl", "");
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "Não foi possível remover o arquivo.",
+      );
+    }
+  }
+  function FilePicker({
+    kind,
+    accept,
+    label,
+    multiple = false,
+  }: {
+    kind: UploadKind;
+    accept: string;
+    label: string;
+    multiple?: boolean;
+  }) {
+    return (
+      <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#d9e4da] bg-white px-4 py-3 text-sm font-medium text-[#2f5145] transition hover:bg-[#f1f6f1]">
+        <span>{uploading === kind ? "Enviando…" : label}</span>
+        <input
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          className="sr-only"
+          disabled={Boolean(uploading)}
+          onChange={(event) => {
+            const files = Array.from(event.target.files ?? []);
+            void files.reduce(
+              (chain, file) => chain.then(() => upload(file, kind)),
+              Promise.resolve(),
+            );
+            event.currentTarget.value = "";
+          }}
+        />
+      </label>
+    );
+  }
   return (
     <>
       <Heading
         eyebrow="Passo 3 · Mídia"
         title="Adicione seus momentos favoritos."
-        text="Cole links públicos das suas fotos, vídeo ou música. O armazenamento de arquivos será conectado na próxima etapa."
+        text="Envie fotos, vídeo e música diretamente para o armazenamento seguro do seu convite."
       />
-      <div className="mt-9 grid gap-5">
-        <Field label="Imagem de capa" hint="Use uma URL de imagem pública (JPG, PNG ou WebP).">
-          <Input
-            value={draft.coverUrl}
-            onChange={(value) => update("coverUrl", value)}
-            placeholder="https://..."
-          />
-        </Field>
-        <Field label="Galeria de fotos" hint="Separe múltiplos links por vírgula.">
-          <Textarea
-            value={draft.galleryUrls.join(", ")}
-            onChange={(value) =>
-              update(
-                "galleryUrls",
-                value
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter(Boolean),
-              )
-            }
-            placeholder="https://foto-1.jpg, https://foto-2.jpg"
-          />
-        </Field>
-        <Field label="Vídeo">
-          <Input
-            value={draft.videoUrl}
-            onChange={(value) => update("videoUrl", value)}
-            placeholder="https://youtube.com/... ou https://..."
-          />
-        </Field>
-        <Field label="Música">
-          <Input
-            value={draft.audioUrl}
-            onChange={(value) => update("audioUrl", value)}
-            placeholder="https://.../musica.mp3"
-          />
-        </Field>
+      <div className="mt-9 grid gap-6">
+        {uploadError && (
+          <div className="rounded-xl bg-[#f8e5df] p-3 text-sm text-[#9b4e3c]">{uploadError}</div>
+        )}
+        <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <p className="font-medium text-[#3f5146]">Imagem de capa</p>
+              <p className="mt-1 text-xs text-[#89857e]">JPG, PNG ou WebP · até 8 MB</p>
+            </div>
+            <FilePicker
+              kind="cover"
+              accept="image/jpeg,image/png,image/webp"
+              label={draft.coverUrl ? "Trocar capa" : "Enviar capa"}
+            />
+          </div>
+          {draft.coverUrl && (
+            <div className="mt-4 flex items-center gap-4">
+              <img
+                src={draft.coverUrl}
+                alt="Prévia da capa"
+                className="h-20 w-20 rounded-xl object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => void remove(draft.coverUrl, "cover")}
+                className="text-sm text-[#9b4e3c]"
+              >
+                Remover
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <p className="font-medium text-[#3f5146]">Galeria de fotos</p>
+              <p className="mt-1 text-xs text-[#89857e]">
+                JPG, PNG, WebP ou GIF · até 8 MB por foto
+              </p>
+            </div>
+            <FilePicker
+              kind="image"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              label="Adicionar fotos"
+              multiple
+            />
+          </div>
+          {draft.galleryUrls.length > 0 && (
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
+              {draft.galleryUrls.map((url) => (
+                <div key={url} className="group relative aspect-square overflow-hidden rounded-xl">
+                  <img src={url} alt="Foto da galeria" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => void remove(url, "image")}
+                    className="absolute inset-x-1 bottom-1 rounded-lg bg-black/65 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
+                  >
+                    Remover
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+            <p className="font-medium text-[#3f5146]">Vídeo</p>
+            <p className="mt-1 text-xs text-[#89857e]">MP4 ou WebM · até 15 MB</p>
+            <div className="mt-4 flex items-center gap-3">
+              <FilePicker
+                kind="video"
+                accept="video/mp4,video/webm"
+                label={draft.videoUrl ? "Trocar vídeo" : "Enviar vídeo"}
+              />
+              {draft.videoUrl && (
+                <button
+                  type="button"
+                  onClick={() => void remove(draft.videoUrl, "video")}
+                  className="text-sm text-[#9b4e3c]"
+                >
+                  Remover
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+            <p className="font-medium text-[#3f5146]">Música</p>
+            <p className="mt-1 text-xs text-[#89857e]">MP3, OGG ou WAV · até 15 MB</p>
+            <div className="mt-4 flex items-center gap-3">
+              <FilePicker
+                kind="audio"
+                accept="audio/mpeg,audio/ogg,audio/wav"
+                label={draft.audioUrl ? "Trocar música" : "Enviar música"}
+              />
+              {draft.audioUrl && (
+                <button
+                  type="button"
+                  onClick={() => void remove(draft.audioUrl, "audio")}
+                  className="text-sm text-[#9b4e3c]"
+                >
+                  Remover
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
