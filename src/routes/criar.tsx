@@ -21,7 +21,7 @@ import {
   type InvitationDraft,
   type RSVPMode,
 } from "@/lib/invitation";
-import type { AnimationStyle } from "@/lib/invitation";
+import type { AnimationStyle, EnvelopePalette, OpeningMotion } from "@/lib/invitation";
 
 export const Route = createFileRoute("/criar")({
   component: CreateInvitation,
@@ -76,6 +76,31 @@ const animationStyles: { id: AnimationStyle; name: string; description: string; 
       sample: "bg-[#52645b]",
     },
   ];
+const openingMotions: { id: OpeningMotion; name: string; description: string }[] = [
+  { id: "lift", name: "Cartão deslizando", description: "O cartão sobe suavemente do envelope" },
+  {
+    id: "zoom",
+    name: "Zoom cinematográfico",
+    description: "A abertura se aproxima com profundidade",
+  },
+  {
+    id: "fade",
+    name: "Revelação suave",
+    description: "O conteúdo aparece em uma transição delicada",
+  },
+  {
+    id: "curtain",
+    name: "Cortina abrindo",
+    description: "As laterais se afastam como uma cortina",
+  },
+];
+const envelopePalettes: { id: EnvelopePalette; name: string; colors: string[] }[] = [
+  { id: "terracotta", name: "Terracota", colors: ["#d1a685", "#6f4230"] },
+  { id: "rose", name: "Rosé", colors: ["#d99a9b", "#754b59"] },
+  { id: "gold", name: "Champagne", colors: ["#e0bf82", "#8f6037"] },
+  { id: "sage", name: "Sálvia", colors: ["#b1c3ad", "#3f5c4c"] },
+  { id: "midnight", name: "Azul noite", colors: ["#647a9a", "#202d4a"] },
+];
 const steps = ["Evento e modelo", "Texto", "Fotos e mídia", "Local", "Confirmação", "Prévia"];
 
 function CreateInvitation() {
@@ -473,6 +498,57 @@ function EventStep({
                 )}
               </button>
             ))}
+          </div>
+        </div>
+        <div className="mt-8 grid gap-8 border-t border-[#ece8e1] pt-8 lg:grid-cols-2">
+          <div>
+            <p className="mb-1 text-sm font-medium text-[#4e4a43]">Movimento da abertura</p>
+            <p className="mb-4 text-xs leading-5 text-[#89857e]">
+              Escolha como o convite será revelado.
+            </p>
+            <div className="space-y-2">
+              {openingMotions.map((motion) => (
+                <button
+                  key={motion.id}
+                  type="button"
+                  onClick={() => update("openingMotion", motion.id)}
+                  className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition ${draft.openingMotion === motion.id ? "border-[#2c302d] bg-[#f3ebe5]" : "border-[#e8e8e3] bg-white hover:border-[#b9cdbb]"}`}
+                >
+                  <span>
+                    <span className="block text-sm font-medium text-[#3f5146]">{motion.name}</span>
+                    <span className="mt-1 block text-xs text-[#89857e]">{motion.description}</span>
+                  </span>
+                  {draft.openingMotion === motion.id && (
+                    <Check size={16} className="text-[#2c302d]" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1 text-sm font-medium text-[#4e4a43]">Cor do envelope</p>
+            <p className="mb-4 text-xs leading-5 text-[#89857e]">
+              Combine a abertura com a identidade do evento.
+            </p>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-2">
+              {envelopePalettes.map((palette) => (
+                <button
+                  key={palette.id}
+                  type="button"
+                  onClick={() => update("envelopePalette", palette.id)}
+                  className={`rounded-xl border p-2 text-left transition ${draft.envelopePalette === palette.id ? "border-[#2c302d] bg-[#f3ebe5] ring-2 ring-[#ead9cf]" : "border-[#e8e8e3] bg-white hover:border-[#b9cdbb]"}`}
+                >
+                  <span className="flex h-10 overflow-hidden rounded-lg">
+                    {palette.colors.map((color) => (
+                      <span key={color} className="flex-1" style={{ backgroundColor: color }} />
+                    ))}
+                  </span>
+                  <span className="mt-2 block text-xs font-medium text-[#4e4a43]">
+                    {palette.name}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

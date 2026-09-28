@@ -276,6 +276,54 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.16);
 }
+.invite-opening.palette-rose .invite-envelope {
+  background: linear-gradient(145deg, #d99a9b, #754b59);
+}
+.invite-opening.palette-gold .invite-envelope {
+  background: linear-gradient(145deg, #e0bf82, #8f6037);
+}
+.invite-opening.palette-sage .invite-envelope {
+  background: linear-gradient(145deg, #b1c3ad, #3f5c4c);
+}
+.invite-opening.palette-midnight .invite-envelope {
+  background: linear-gradient(145deg, #647a9a, #202d4a);
+}
+.invite-opening.palette-sage .invite-envelope-card {
+  color: #31483b;
+}
+.invite-opening.palette-midnight .invite-envelope-card {
+  background: #eef1f6;
+  color: #263653;
+}
+.invite-opening.motion-zoom .invite-envelope-card {
+  transform: scale(0.82) translateY(18%);
+}
+.invite-opening.motion-zoom.is-opening .invite-envelope-card {
+  transform: scale(1.08) translateY(-35%);
+}
+.invite-opening.motion-zoom .invite-envelope::before {
+  transition-duration: 800ms;
+}
+.invite-opening.motion-fade .invite-envelope-card {
+  opacity: 0.42;
+  transition:
+    transform 700ms ease,
+    opacity 800ms ease;
+}
+.invite-opening.motion-fade.is-opening .invite-envelope-card {
+  opacity: 1;
+  transform: translateY(-25%);
+}
+.invite-opening.motion-curtain .invite-envelope {
+  clip-path: inset(0 0 0 0 round 22px);
+  transition: clip-path 800ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.invite-opening.motion-curtain.is-opening .invite-envelope {
+  clip-path: inset(0 48% 0 48% round 22px);
+}
+.invite-opening.motion-curtain .invite-envelope-card {
+  transition-delay: 120ms;
+}
 .music-fab {
   position: fixed;
   right: 18px;
