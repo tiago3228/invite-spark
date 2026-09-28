@@ -21,6 +21,7 @@ export async function findPublishedInvitation(slug: string) {
     .eq("status", "published")
     .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("INVITATION_NOT_FOUND");
   return data;
 }
 

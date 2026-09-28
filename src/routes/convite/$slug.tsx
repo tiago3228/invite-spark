@@ -17,15 +17,22 @@ function PublicInvitation() {
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;
+    const timeout = window.setTimeout(() => {
+      if (active)
+        setError("Não foi possível carregar este convite agora. Tente atualizar a página.");
+    }, 10000);
     void findPublishedInvitation(slug)
       .then((data) => {
+        window.clearTimeout(timeout);
         if (active) setInvitation(data);
       })
       .catch(() => {
+        window.clearTimeout(timeout);
         if (active) setError("Este convite não está disponível ou ainda não foi publicado.");
       });
     return () => {
       active = false;
+      window.clearTimeout(timeout);
     };
   }, [slug]);
   if (error) return <EmptyPublic message={error} />;
