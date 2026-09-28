@@ -71,8 +71,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <main className="flex min-h-screen bg-[#fbfaf7] text-[#292724]">
-      <div className="hidden w-[43%] flex-col justify-between bg-[#2f5145] p-10 text-white lg:flex">
+    <main className="flex min-h-screen bg-[#f8f8f6] text-[#232522]">
+      <div className="hidden w-[43%] flex-col justify-between bg-[#2c302d] p-10 text-white lg:flex">
         <Link to="/" className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
             <Flower2 size={18} />
@@ -80,7 +80,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           <span className="font-serif text-xl">meu convite</span>
         </Link>
         <div className="max-w-md">
-          <p className="text-xs uppercase tracking-[0.25em] text-[#e8b58b]">Um começo especial</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#d5a487]">Um começo especial</p>
           <h1 className="mt-5 font-serif text-5xl leading-tight">
             Seu próximo capítulo começa aqui.
           </h1>
@@ -93,24 +93,24 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       <div className="flex w-full flex-col px-5 py-7 sm:px-10 lg:w-[57%] lg:px-20">
         <Link
           to="/"
-          className="flex items-center gap-2 text-sm text-[#77736b] transition hover:text-[#2f5145] lg:hidden"
+          className="flex items-center gap-2 text-sm text-[#777a74] transition hover:text-[#2c302d] lg:hidden"
         >
           <ArrowLeft size={16} /> Voltar ao início
         </Link>
         <div className="m-auto w-full max-w-md py-10">
           <div className="mb-10 lg:hidden">
-            <div className="flex items-center gap-2 text-[#2f5145]">
+            <div className="flex items-center gap-2 text-[#2c302d]">
               <Flower2 size={18} />
               <span className="font-serif text-xl">meu convite</span>
             </div>
           </div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#bd8051]">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#a76e59]">
             {isSignup ? "Comece agora" : "Que bom ver você"}
           </p>
-          <h2 className="mt-3 font-serif text-4xl tracking-tight text-[#2f5145]">
+          <h2 className="mt-3 font-serif text-4xl tracking-tight text-[#2c302d]">
             {isSignup ? "Crie sua conta." : "Entre na sua conta."}
           </h2>
-          <p className="mt-3 text-[#77736b]">
+          <p className="mt-3 text-[#777a74]">
             {isSignup
               ? "Leva menos de um minuto para começar seu convite."
               : "Continue criando momentos inesquecíveis."}
@@ -128,7 +128,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded-xl border border-[#dedbd3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#b1ada5] focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+                      className="w-full rounded-xl border border-[#e8e8e3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#a0a19a] focus:border-[#a76e59] focus:ring-4 focus:ring-[#ead9cf]"
                       placeholder="Como podemos chamar você?"
                     />
                   </span>
@@ -141,7 +141,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                       required
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
-                      className="w-full rounded-xl border border-[#dedbd3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#b1ada5] focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+                      className="w-full rounded-xl border border-[#e8e8e3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#a0a19a] focus:border-[#a76e59] focus:ring-4 focus:ring-[#ead9cf]"
                       placeholder="(00) 00000-0000"
                     />
                   </span>
@@ -157,7 +157,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-[#dedbd3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#b1ada5] focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+                  className="w-full rounded-xl border border-[#e8e8e3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#a0a19a] focus:border-[#a76e59] focus:ring-4 focus:ring-[#ead9cf]"
                   placeholder="voce@email.com"
                 />
               </span>
@@ -172,32 +172,32 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-[#dedbd3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#b1ada5] focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+                  className="w-full rounded-xl border border-[#e8e8e3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#a0a19a] focus:border-[#a76e59] focus:ring-4 focus:ring-[#ead9cf]"
                   placeholder="Mínimo de 6 caracteres"
                 />
               </span>
             </label>
             {isSignup && (
-              <label className="flex items-start gap-3 text-sm leading-5 text-[#77736b]">
+              <label className="flex items-start gap-3 text-sm leading-5 text-[#777a74]">
                 <input
                   type="checkbox"
                   checked={terms}
                   onChange={(e) => setTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 accent-[#2f5145]"
+                  className="mt-1 h-4 w-4 accent-[#2c302d]"
                 />{" "}
                 <span>Li e aceito os termos de uso e a política de privacidade.</span>
               </label>
             )}
             {message && (
               <div
-                className={`rounded-xl px-4 py-3 text-sm leading-5 ${message.type === "success" ? "bg-[#e4f0e5] text-[#2f6145]" : "bg-[#f8e5df] text-[#9b4e3c]"}`}
+                className={`rounded-xl px-4 py-3 text-sm leading-5 ${message.type === "success" ? "bg-[#edf2ed] text-[#55725e]" : "bg-[#f8eee9] text-[#a45f4e]"}`}
               >
                 {message.text}
               </div>
             )}
             <button
               disabled={loading}
-              className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#2f5145] px-5 py-3.5 font-medium text-white transition hover:bg-[#234237] disabled:cursor-not-allowed disabled:opacity-60"
+              className="group flex w-full items-center justify-center gap-3 rounded-xl bg-[#2c302d] px-5 py-3.5 font-medium text-white transition hover:bg-[#1d211f] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -213,17 +213,17 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               )}
             </button>
           </form>
-          <p className="mt-7 text-center text-sm text-[#77736b]">
+          <p className="mt-7 text-center text-sm text-[#777a74]">
             {isSignup ? "Já tem uma conta?" : "Ainda não tem uma conta?"}{" "}
             <Link
               to={isSignup ? "/login" : "/cadastro"}
-              className="font-semibold text-[#2f5145] hover:underline"
+              className="font-semibold text-[#2c302d] hover:underline"
             >
               {isSignup ? "Entrar" : "Criar agora"}
             </Link>
           </p>
           {!isSupabaseConfigured && (
-            <div className="mt-8 flex gap-2 rounded-xl border border-[#ead9bd] bg-[#fffaf0] p-3 text-xs leading-5 text-[#856a42]">
+            <div className="mt-8 flex gap-2 rounded-xl border border-[#ead9cf] bg-[#fcf8f4] p-3 text-xs leading-5 text-[#8b6756]">
               <Check size={15} className="mt-0.5 shrink-0" /> A interface está pronta. A conexão com
               o Supabase será ativada assim que o projeto receber as variáveis do ambiente.
             </div>

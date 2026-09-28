@@ -47,7 +47,7 @@ const themes = [
   },
   { name: "Celebre", description: "Festa vibrante", className: "theme-celebrate", premium: true },
 ];
-const steps = ["Evento", "Mensagem", "Mídia", "Local", "RSVP", "Prévia"];
+const steps = ["Evento e modelo", "Texto", "Fotos e mídia", "Local", "Confirmação", "Prévia"];
 
 function CreateInvitation() {
   const navigate = useNavigate();
@@ -144,21 +144,21 @@ function CreateInvitation() {
   );
 
   return (
-    <main className="min-h-screen bg-[#fbfaf7] text-[#292724]">
-      <header className="border-b border-[#e6e0d7] bg-white/80">
+    <main className="min-h-screen bg-[#f8f8f6] text-[#232522]">
+      <header className="border-b border-[#e8e8e3] bg-white/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
           <button
             onClick={back}
-            className="flex items-center gap-2 text-sm text-[#77736b] transition hover:text-[#2f5145]"
+            className="flex items-center gap-2 text-sm text-[#777a74] transition hover:text-[#2c302d]"
           >
             <ArrowLeft size={16} /> Voltar
           </button>
-          <div className="flex items-center gap-2 text-[#2f5145]">
+          <div className="flex items-center gap-2 text-[#2c302d]">
             <Flower2 size={18} />
             <span className="font-serif text-xl">meu convite</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#89857e]">
-            <Save size={14} className="text-[#6c9476]" /> {saveState}
+          <div className="flex items-center gap-2 text-xs text-[#9d9d96]">
+            <Save size={14} className="text-[#7e9c86]" /> {saveState}
           </div>
         </div>
       </header>
@@ -167,10 +167,10 @@ function CreateInvitation() {
           {steps.map((label, index) => (
             <div key={label} className="min-w-0">
               <div
-                className={`h-1.5 rounded-full ${index + 1 <= step ? "bg-[#2f5145]" : "bg-[#e6e0d7]"}`}
+                className={`h-1.5 rounded-full ${index + 1 <= step ? "bg-[#2c302d]" : "bg-[#e8e8e3]"}`}
               />
               <span
-                className={`mt-2 hidden truncate text-xs sm:block ${index + 1 === step ? "font-semibold text-[#2f5145]" : "text-[#a29d94]"}`}
+                className={`mt-2 hidden truncate text-xs sm:block ${index + 1 === step ? "font-semibold text-[#2c302d]" : "text-[#a0a19a]"}`}
               >
                 {index + 1}. {label}
               </span>
@@ -178,9 +178,9 @@ function CreateInvitation() {
           ))}
         </div>
         {error && (
-          <div className="mb-5 rounded-xl bg-[#f8e5df] p-3 text-sm text-[#9b4e3c]">{error}</div>
+          <div className="mb-5 rounded-xl bg-[#f8eee9] p-3 text-sm text-[#a45f4e]">{error}</div>
         )}
-        <div className="grid gap-10 lg:grid-cols-[1fr_330px]">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
           <section className="min-w-0">
             {step === 1 && (
               <EventStep
@@ -204,7 +204,7 @@ function CreateInvitation() {
             <button
               onClick={() => void publish()}
               disabled={publishing || !draft.id}
-              className="inline-flex items-center justify-center gap-3 rounded-full border border-[#2f5145] px-6 py-3.5 font-medium text-[#2f5145] transition hover:bg-[#eaf2eb] disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-3 rounded-full border border-[#2c302d] px-6 py-3.5 font-medium text-[#2c302d] transition hover:bg-[#f3ebe5] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {publishing ? "Publicando…" : "Publicar convite"}
               <Sparkles size={17} />
@@ -213,7 +213,7 @@ function CreateInvitation() {
           <button
             onClick={next}
             disabled={!canContinue}
-            className="inline-flex items-center gap-3 rounded-full bg-[#2f5145] px-6 py-3.5 font-medium text-white transition hover:bg-[#234237] disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-3 rounded-full bg-[#2c302d] px-6 py-3.5 font-medium text-white transition hover:bg-[#1d211f] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {step === steps.length
               ? "Voltar ao painel"
@@ -246,7 +246,7 @@ function Field({
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-[#4e4a43]">{label}</span>
       {children}
-      {hint && <span className="mt-1.5 block text-xs text-[#a29d94]">{hint}</span>}
+      {hint && <span className="mt-1.5 block text-xs text-[#a0a19a]">{hint}</span>}
     </label>
   );
 }
@@ -294,10 +294,10 @@ function Heading({ eyebrow, title, text }: { eyebrow: string; title: string; tex
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#bd8051]">{eyebrow}</p>
-      <h1 className="mt-4 font-serif text-4xl tracking-tight text-[#2f5145] sm:text-5xl">
+      <h1 className="mt-4 font-serif text-4xl tracking-tight text-[#2c302d] sm:text-5xl">
         {title}
       </h1>
-      <p className="mt-4 max-w-xl leading-7 text-[#77736b]">{text}</p>
+      <p className="mt-4 max-w-xl leading-7 text-[#777a74]">{text}</p>
     </div>
   );
 }
@@ -324,7 +324,7 @@ function EventStep({
               type="button"
               key={item}
               onClick={() => update("eventType", item)}
-              className={`rounded-xl border p-4 text-left text-sm transition ${draft.eventType === item ? "border-[#2f5145] bg-[#eaf2eb] font-medium text-[#2f5145] ring-2 ring-[#d7e6d9]" : "border-[#e6e0d7] bg-white hover:border-[#b9cdbb]"}`}
+              className={`rounded-xl border p-4 text-left text-sm transition ${draft.eventType === item ? "border-[#2c302d] bg-[#f3ebe5] font-medium text-[#2c302d] ring-2 ring-[#d7e6d9]" : "border-[#e8e8e3] bg-white hover:border-[#b9cdbb]"}`}
             >
               {draft.eventType === item && <Check size={15} className="mb-2" />}
               {item}
@@ -350,11 +350,11 @@ function EventStep({
               className={`text-left ${item.premium && !premiumUnlocked ? "cursor-not-allowed" : ""}`}
             >
               <div
-                className={`relative aspect-[0.8] overflow-hidden rounded-3xl ${item.className} p-5 transition ${!item.premium || premiumUnlocked ? "hover:-translate-y-1" : "opacity-60 grayscale"} ${draft.themeName === item.name ? "ring-4 ring-[#2f5145] ring-offset-2" : ""}`}
+                className={`relative aspect-[0.8] overflow-hidden rounded-3xl ${item.className} p-5 transition ${!item.premium || premiumUnlocked ? "hover:-translate-y-1" : "opacity-60 grayscale"} ${draft.themeName === item.name ? "ring-4 ring-[#2c302d] ring-offset-2" : ""}`}
               >
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <Sparkles size={17} className="text-[#587160]" />
-                  <span className="mt-3 font-serif text-3xl italic text-[#2f5145]">
+                  <span className="mt-3 font-serif text-3xl italic text-[#2c302d]">
                     {item.name}
                   </span>
                   <span className="mt-3 text-xs uppercase tracking-wider text-[#637667]">
@@ -362,12 +362,12 @@ function EventStep({
                   </span>
                 </div>
                 {item.premium && !premiumUnlocked && (
-                  <span className="absolute bottom-3 left-3 rounded-full bg-[#2f5145] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                  <span className="absolute bottom-3 left-3 rounded-full bg-[#2c302d] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
                     Premium
                   </span>
                 )}
                 {draft.themeName === item.name && (
-                  <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#2f5145] text-white">
+                  <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#2c302d] text-white">
                     <Check size={15} />
                   </span>
                 )}
@@ -387,7 +387,7 @@ function EventStep({
               type="button"
               onClick={() => void onPurchase()}
               disabled={premiumLoading}
-              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#2f5145] px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#2c302d] px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
             >
               {premiumLoading ? "Abrindo pagamento…" : "Comprar temas premium"}
             </button>
@@ -505,7 +505,7 @@ function MediaStep({ draft, update, userId }: EditorProps) {
     multiple?: boolean;
   }) {
     return (
-      <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#d9e4da] bg-white px-4 py-3 text-sm font-medium text-[#2f5145] transition hover:bg-[#f1f6f1]">
+      <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#d9e4da] bg-white px-4 py-3 text-sm font-medium text-[#2c302d] transition hover:bg-[#f1f6f1]">
         <span>{uploading === kind ? "Enviando…" : label}</span>
         <input
           type="file"
@@ -534,13 +534,13 @@ function MediaStep({ draft, update, userId }: EditorProps) {
       />
       <div className="mt-9 grid gap-6">
         {uploadError && (
-          <div className="rounded-xl bg-[#f8e5df] p-3 text-sm text-[#9b4e3c]">{uploadError}</div>
+          <div className="rounded-xl bg-[#f8eee9] p-3 text-sm text-[#a45f4e]">{uploadError}</div>
         )}
-        <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+        <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="font-medium text-[#3f5146]">Imagem de capa</p>
-              <p className="mt-1 text-xs text-[#89857e]">JPG, PNG ou WebP · até 8 MB</p>
+              <p className="mt-1 text-xs text-[#9d9d96]">JPG, PNG ou WebP · até 8 MB</p>
             </div>
             <FilePicker
               kind="cover"
@@ -558,18 +558,18 @@ function MediaStep({ draft, update, userId }: EditorProps) {
               <button
                 type="button"
                 onClick={() => void remove(draft.coverUrl, "cover")}
-                className="text-sm text-[#9b4e3c]"
+                className="text-sm text-[#a45f4e]"
               >
                 Remover
               </button>
             </div>
           )}
         </div>
-        <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+        <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <p className="font-medium text-[#3f5146]">Galeria de fotos</p>
-              <p className="mt-1 text-xs text-[#89857e]">
+              <p className="mt-1 text-xs text-[#9d9d96]">
                 JPG, PNG, WebP ou GIF · até 8 MB por foto
               </p>
             </div>
@@ -598,9 +598,9 @@ function MediaStep({ draft, update, userId }: EditorProps) {
           )}
         </div>
         <div className="grid gap-6 sm:grid-cols-2">
-          <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+          <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
             <p className="font-medium text-[#3f5146]">Vídeo</p>
-            <p className="mt-1 text-xs text-[#89857e]">MP4 ou WebM · até 15 MB</p>
+            <p className="mt-1 text-xs text-[#9d9d96]">MP4 ou WebM · até 15 MB</p>
             <div className="mt-4 flex items-center gap-3">
               <FilePicker
                 kind="video"
@@ -611,16 +611,16 @@ function MediaStep({ draft, update, userId }: EditorProps) {
                 <button
                   type="button"
                   onClick={() => void remove(draft.videoUrl, "video")}
-                  className="text-sm text-[#9b4e3c]"
+                  className="text-sm text-[#a45f4e]"
                 >
                   Remover
                 </button>
               )}
             </div>
           </div>
-          <div className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
+          <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
             <p className="font-medium text-[#3f5146]">Música</p>
-            <p className="mt-1 text-xs text-[#89857e]">MP3, OGG ou WAV · até 15 MB</p>
+            <p className="mt-1 text-xs text-[#9d9d96]">MP3, OGG ou WAV · até 15 MB</p>
             <div className="mt-4 flex items-center gap-3">
               <FilePicker
                 kind="audio"
@@ -631,7 +631,7 @@ function MediaStep({ draft, update, userId }: EditorProps) {
                 <button
                   type="button"
                   onClick={() => void remove(draft.audioUrl, "audio")}
-                  className="text-sm text-[#9b4e3c]"
+                  className="text-sm text-[#a45f4e]"
                 >
                   Remover
                 </button>
@@ -704,13 +704,13 @@ function RsvpStep({ draft, update }: EditorProps) {
             type="button"
             key={item.value}
             onClick={() => update("rsvpMode", item.value)}
-            className={`flex items-center justify-between rounded-2xl border p-5 text-left transition ${draft.rsvpMode === item.value ? "border-[#2f5145] bg-[#eaf2eb] ring-2 ring-[#d7e6d9]" : "border-[#e6e0d7] bg-white"}`}
+            className={`flex items-center justify-between rounded-2xl border p-5 text-left transition ${draft.rsvpMode === item.value ? "border-[#2c302d] bg-[#f3ebe5] ring-2 ring-[#d7e6d9]" : "border-[#e8e8e3] bg-white"}`}
           >
             <span>
               <span className="block font-medium text-[#3c5145]">{item.label}</span>
-              <span className="mt-1 block text-sm text-[#89857e]">{item.text}</span>
+              <span className="mt-1 block text-sm text-[#9d9d96]">{item.text}</span>
             </span>
-            {draft.rsvpMode === item.value && <Check size={18} className="text-[#2f5145]" />}
+            {draft.rsvpMode === item.value && <Check size={18} className="text-[#2c302d]" />}
           </button>
         ))}
       </div>
@@ -748,7 +748,7 @@ function RsvpStep({ draft, update }: EditorProps) {
           type="checkbox"
           checked={draft.showCountdown}
           onChange={(e) => update("showCountdown", e.target.checked)}
-          className="h-4 w-4 accent-[#2f5145]"
+          className="h-4 w-4 accent-[#2c302d]"
         />{" "}
         Mostrar contagem regressiva no convite
       </label>
@@ -773,9 +773,9 @@ function PreviewStep({ draft }: { draft: InvitationDraft }) {
 function PreviewCard({ draft }: { draft: InvitationDraft }) {
   return (
     <aside className="lg:sticky lg:top-8 lg:self-start">
-      <div className="overflow-hidden rounded-[2rem] border-[7px] border-white bg-[#dce8dd] shadow-xl shadow-[#2f5145]/10">
+      <div className="mx-auto max-w-[380px] overflow-hidden rounded-[2rem] border-[8px] border-white bg-[#dce8dd] shadow-[0_24px_60px_rgba(44,48,45,0.14)]">
         <div
-          className={`min-h-[430px] ${draft.themeName === "Essência" ? "theme-essence" : draft.themeName === "Celebre" ? "theme-celebrate" : "theme-garden"} p-7 text-center sm:p-9`}
+          className={`min-h-[520px] ${draft.themeName === "Essência" ? "theme-essence" : draft.themeName === "Celebre" ? "theme-celebrate" : "theme-garden"} p-7 text-center sm:p-9`}
         >
           <div className="text-[10px] uppercase tracking-[0.3em] text-[#5b7464]">
             {draft.phrase || "um dia para lembrar"}
@@ -787,7 +787,7 @@ function PreviewCard({ draft }: { draft: InvitationDraft }) {
               className="mx-auto mt-5 h-28 w-28 rounded-full object-cover ring-4 ring-white/50"
             />
           )}
-          <div className="mt-14 font-serif text-4xl italic leading-tight text-[#2f5145]">
+          <div className="mt-14 font-serif text-4xl italic leading-tight text-[#2c302d]">
             {draft.title || "Seu evento"}
           </div>
           <div className="mx-auto mt-5 h-px w-12 bg-[#78927e]" />
@@ -802,7 +802,7 @@ function PreviewCard({ draft }: { draft: InvitationDraft }) {
           )}
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-2 text-xs text-[#89857e]">
+      <div className="mt-4 flex items-center gap-2 text-xs text-[#9d9d96]">
         <MapPin size={14} /> Prévia atualizada conforme você digita
       </div>
     </aside>
