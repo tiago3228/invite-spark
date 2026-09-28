@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { coverLibrary, galleryLibrary, royaltyFreeSources } from "@/data/media-library";
 import { hasPremiumThemes, startPremiumThemePurchase } from "@/lib/billing";
 import { removeInvitationFile, uploadInvitationFile, type UploadKind } from "@/lib/storage";
+import { playOpeningSound } from "@/lib/opening-sound";
 import {
   emptyDraft,
   publishInvitation,
@@ -21,7 +22,12 @@ import {
   type InvitationDraft,
   type RSVPMode,
 } from "@/lib/invitation";
-import type { AnimationStyle, EnvelopePalette, OpeningMotion } from "@/lib/invitation";
+import type {
+  AnimationStyle,
+  EnvelopePalette,
+  OpeningMotion,
+  OpeningSound,
+} from "@/lib/invitation";
 
 export const Route = createFileRoute("/criar")({
   component: CreateInvitation,
@@ -100,6 +106,11 @@ const envelopePalettes: { id: EnvelopePalette; name: string; colors: string[] }[
   { id: "gold", name: "Champagne", colors: ["#e0bf82", "#8f6037"] },
   { id: "sage", name: "Sálvia", colors: ["#b1c3ad", "#3f5c4c"] },
   { id: "midnight", name: "Azul noite", colors: ["#647a9a", "#202d4a"] },
+];
+const openingSounds: { id: OpeningSound; name: string; description: string }[] = [
+  { id: "paper", name: "Papel abrindo", description: "Ruído sutil e elegante ao abrir" },
+  { id: "chime", name: "Sininho suave", description: "Três notas delicadas de celebração" },
+  { id: "none", name: "Sem efeito", description: "Abertura silenciosa" },
 ];
 const steps = ["Evento e modelo", "Texto", "Fotos e mídia", "Local", "Confirmação", "Prévia"];
 
@@ -535,7 +546,10 @@ function EventStep({
                 <button
                   key={palette.id}
                   type="button"
-                  onClick={() => update("envelopePalette", palette.id)}
+                  onClick={() => {
+                    update("envelopePalette", palette.id);
+                    update("customEnvelopeColor", "");
+                  }}
                   className={`rounded-xl border p-2 text-left transition ${draft.envelopePalette === palette.id ? "border-[#2c302d] bg-[#f3ebe5] ring-2 ring-[#ead9cf]" : "border-[#e8e8e3] bg-white hover:border-[#b9cdbb]"}`}
                 >
                   <span className="flex h-10 overflow-hidden rounded-lg">
@@ -549,6 +563,47 @@ function EventStep({
                 </button>
               ))}
             </div>
+            <label className="mt-4 flex items-center gap-3 rounded-xl border border-dashed border-[#d8d1c8] bg-[#fffdfa] p-3">
+              <input
+                type="color"
+                value={draft.customEnvelopeColor || "#8b5e4b"}
+                onChange={(event) => update("customEnvelopeColor", event.target.value)}
+                className="h-10 w-12 cursor-pointer rounded-lg border-0 bg-transparent p-0"
+                aria-label="Escolher cor personalizada do envelope"
+              />
+              <span>
+                <span className="block text-sm font-medium text-[#4e4a43]">
+                  Minha cor personalizada
+                </span>
+                <span className="mt-1 block text-xs text-[#89857e]">
+                  {draft.customEnvelopeColor || "Escolha qualquer cor"}
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div className="mt-8 border-t border-[#ece8e1] pt-8">
+          <p className="mb-1 text-sm font-medium text-[#4e4a43]">Efeito sonoro da abertura</p>
+          <p className="mb-4 text-xs leading-5 text-[#89857e]">
+            O som é gerado no navegador e só toca depois do clique do convidado.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {openingSounds.map((sound) => (
+              <button
+                key={sound.id}
+                type="button"
+                onClick={() => {
+                  update("openingSound", sound.id);
+                  playOpeningSound(sound.id);
+                }}
+                className={`rounded-xl border p-3 text-left transition ${draft.openingSound === sound.id ? "border-[#2c302d] bg-[#f3ebe5]" : "border-[#e8e8e3] bg-white hover:border-[#b9cdbb]"}`}
+              >
+                <span className="block text-sm font-medium text-[#3f5146]">{sound.name}</span>
+                <span className="mt-1 block text-xs leading-5 text-[#89857e]">
+                  {sound.description}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -1071,11 +1126,13 @@ function PreviewStep({ draft }: { draft: InvitationDraft }) {
   );
 }
 function PreviewCard({ draft }: { draft: InvitationDraft }) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const customColor = draft.customEnvelopeColor || undefined;
   return (
     <aside className="lg:sticky lg:top-8 lg:self-start">
       <div className="mx-auto max-w-[380px] overflow-hidden rounded-[2rem] border-[8px] border-white bg-[#dce8dd] shadow-[0_24px_60px_rgba(44,48,45,0.14)]">
         <div
-          className={`min-h-[520px] ${draft.themeName === "Essência" ? "theme-essence" : draft.themeName === "Celebre" ? "theme-celebrate" : "theme-garden"} p-7 text-center sm:p-9`}
+          className={`editor-invitation-preview ${draft.themeName === "Essência" ? "theme-essence" : draft.themeName === "Celebre" ? "theme-celebrate" : "theme-garden"} p-7 text-center sm:p-9`}
         >
           <div className="text-[10px] uppercase tracking-[0.3em] text-[#5b7464]">
             {draft.phrase || "um dia para lembrar"}
@@ -1102,8 +1159,39 @@ function PreviewCard({ draft }: { draft: InvitationDraft }) {
           )}
         </div>
       </div>
+      <div
+        className={`invite-opening editor-opening-preview style-${draft.animationStyle} motion-${draft.openingMotion} palette-${draft.envelopePalette} ${customColor ? "palette-custom" : ""} ${previewOpen ? "is-opening" : ""}`}
+        style={
+          customColor
+            ? ({ "--custom-envelope-color": customColor } as React.CSSProperties)
+            : undefined
+        }
+      >
+        <div className="invite-opening-content">
+          <p className="invite-opening-kicker">Prévia da abertura</p>
+          <div className="invite-envelope mt-4">
+            <div className="invite-envelope-card">
+              {draft.coverUrl && <img src={draft.coverUrl} alt="" />}
+              <div className="invite-envelope-card-content">
+                <p className="invite-opening-kicker">Um momento especial</p>
+                <h1 className="invite-opening-title">{draft.title || "Seu evento"}</h1>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="invite-opening-button"
+            onClick={() => {
+              setPreviewOpen((current) => !current);
+              if (!previewOpen) playOpeningSound(draft.openingSound);
+            }}
+          >
+            {previewOpen ? "Reabrir prévia" : "Testar abertura"}
+          </button>
+        </div>
+      </div>
       <div className="mt-4 flex items-center gap-2 text-xs text-[#9d9d96]">
-        <MapPin size={14} /> Prévia atualizada conforme você digita
+        <MapPin size={14} /> Clique em “Testar abertura” para experimentar movimento, cor e som
       </div>
     </aside>
   );

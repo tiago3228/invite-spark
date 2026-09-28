@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { findPublishedInvitation } from "@/lib/rsvp";
+import { playOpeningSound, type OpeningSound } from "@/lib/opening-sound";
 
 export const Route = createFileRoute("/convite/$slug")({
   component: PublicInvitation,
@@ -59,8 +60,11 @@ function PublicInvitation() {
   const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
   const coverUrl = content["media"]?.["coverUrl"] as string | undefined;
   const audioUrl = content["media"]?.["audioUrl"] as string | undefined;
+  const openingSound = (content["openingSound"] || "paper") as OpeningSound;
+  const customEnvelopeColor = (content["customEnvelopeColor"] || "") as string;
   function handleOpen() {
     setOpened(true);
+    playOpeningSound(openingSound);
     void audioRef.current?.play().catch(() => undefined);
   }
   function toggleMusic() {
@@ -86,6 +90,7 @@ function PublicInvitation() {
         animationStyle={content["animationStyle"] || "envelope"}
         openingMotion={content["openingMotion"] || "lift"}
         envelopePalette={content["envelopePalette"] || "terracotta"}
+        customEnvelopeColor={customEnvelopeColor}
         opened={opened}
         onOpen={handleOpen}
       />
@@ -230,6 +235,7 @@ function OpeningOverlay({
   animationStyle,
   openingMotion,
   envelopePalette,
+  customEnvelopeColor,
   opened,
   onOpen,
 }: {
@@ -238,12 +244,18 @@ function OpeningOverlay({
   animationStyle: string;
   openingMotion: string;
   envelopePalette: string;
+  customEnvelopeColor: string;
   opened: boolean;
   onOpen: () => void;
 }) {
   return (
     <div
-      className={`invite-opening style-${animationStyle} motion-${openingMotion} palette-${envelopePalette} ${opened ? "is-opening" : ""}`}
+      className={`invite-opening style-${animationStyle} motion-${openingMotion} palette-${envelopePalette} ${customEnvelopeColor ? "palette-custom" : ""} ${opened ? "is-opening" : ""}`}
+      style={
+        customEnvelopeColor
+          ? ({ "--custom-envelope-color": customEnvelopeColor } as React.CSSProperties)
+          : undefined
+      }
       aria-hidden={opened}
     >
       <div

@@ -295,6 +295,49 @@
   background: #eef1f6;
   color: #263653;
 }
+.invite-opening.palette-custom .invite-envelope {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--custom-envelope-color) 62%, white),
+    var(--custom-envelope-color)
+  );
+}
+.editor-opening-preview {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  display: block;
+  min-height: 430px;
+  margin-top: 16px;
+  border-radius: 1.5rem;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.editor-opening-preview .invite-opening-content {
+  width: min(88%, 310px);
+  margin: 0 auto;
+  padding: 28px 0;
+}
+.editor-opening-preview.is-opening {
+  opacity: 1;
+  visibility: visible;
+}
+.editor-opening-preview .invite-envelope {
+  height: 270px;
+  min-height: 0;
+}
+.editor-opening-preview .invite-envelope-card {
+  inset: 10% 8%;
+}
+.editor-opening-preview .invite-opening-title {
+  font-size: clamp(1.8rem, 7vw, 3rem);
+}
+.editor-opening-preview .invite-opening-button {
+  margin-top: 20px;
+  font-size: 0.62rem;
+  padding: 11px 16px;
+}
 .invite-opening.motion-zoom .invite-envelope-card {
   transform: scale(0.82) translateY(18%);
 }

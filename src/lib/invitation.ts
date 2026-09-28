@@ -5,6 +5,7 @@ export type RSVPMode = "native" | "google_forms" | "whatsapp" | "none";
 export type AnimationStyle = "envelope" | "floral" | "celebrate" | "minimal";
 export type OpeningMotion = "lift" | "zoom" | "fade" | "curtain";
 export type EnvelopePalette = "terracotta" | "rose" | "gold" | "sage" | "midnight";
+export type OpeningSound = "none" | "paper" | "chime";
 
 export type InvitationDraft = {
   id?: string;
@@ -30,6 +31,8 @@ export type InvitationDraft = {
   animationStyle: AnimationStyle;
   openingMotion: OpeningMotion;
   envelopePalette: EnvelopePalette;
+  customEnvelopeColor: string;
+  openingSound: OpeningSound;
   rsvpMode: RSVPMode;
   rsvpWhatsapp: string;
   rsvpMessage: string;
@@ -60,6 +63,8 @@ export const emptyDraft: InvitationDraft = {
   animationStyle: "envelope",
   openingMotion: "lift",
   envelopePalette: "terracotta",
+  customEnvelopeColor: "",
+  openingSound: "paper",
   rsvpMode: "native",
   rsvpWhatsapp: "",
   rsvpMessage: "Olá! Sou [NOME] e gostaria de confirmar minha presença.",
@@ -93,6 +98,8 @@ function toRow(draft: InvitationDraft, userId: string) {
       animationStyle: draft.animationStyle,
       openingMotion: draft.openingMotion,
       envelopePalette: draft.envelopePalette,
+      customEnvelopeColor: draft.customEnvelopeColor,
+      openingSound: draft.openingSound,
       countdown: draft.showCountdown,
     },
     location: {
@@ -182,6 +189,8 @@ export async function loadInvitation(id: string, userId: string): Promise<Invita
     galleryUrls: Array.isArray(media["galleryUrls"]) ? media["galleryUrls"] : [],
     videoUrl: media["videoUrl"] ?? "",
     audioUrl: media["audioUrl"] ?? "",
+    customEnvelopeColor: content["customEnvelopeColor"] ?? emptyDraft.customEnvelopeColor,
+    openingSound: content["openingSound"] ?? emptyDraft.openingSound,
     venueName: location["venueName"] ?? "",
     address: location["address"] ?? "",
     mapsUrl: location["mapsUrl"] ?? "",
