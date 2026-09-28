@@ -8,7 +8,7 @@ import introVideo from "@/assets/quinze-intro.mp4.asset.json";
 const db = supabase as any;
 type Guest = { name: string; status: string; companions: number } | null;
 
-export function QuinzeInvite({ invitation, token }: { invitation: any; token?: string }) {
+export function QuinzeInvite({ invitation, token }: { invitation: any; token?: string | undefined }) {
   const content = (invitation.content ?? {}) as Record<string, any>;
   const location = (invitation.location ?? {}) as Record<string, any>;
   const name = invitation.title || "Aniversariante";
