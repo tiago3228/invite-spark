@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { hasPremiumThemes, startPremiumThemePurchase } from "@/lib/billing";
 import { removeInvitationFile, uploadInvitationFile, type UploadKind } from "@/lib/storage";
 import {
   emptyDraft,
@@ -37,9 +38,14 @@ const eventTypes = [
   "Outro",
 ];
 const themes = [
-  { name: "Jardim", description: "Floral delicado", className: "theme-garden" },
-  { name: "Essência", description: "Minimalista e elegante", className: "theme-essence" },
-  { name: "Celebre", description: "Festa vibrante", className: "theme-celebrate" },
+  { name: "Jardim", description: "Floral delicado", className: "theme-garden", premium: false },
+  {
+    name: "Essência",
+    description: "Minimalista e elegante",
+    className: "theme-essence",
+    premium: true,
+  },
+  { name: "Celebre", description: "Festa vibrante", className: "theme-celebrate", premium: true },
 ];
 const steps = ["Evento", "Mensagem", "Mídia", "Local", "RSVP", "Prévia"];
 
@@ -51,11 +57,17 @@ function CreateInvitation() {
   const [saveState, setSaveState] = useState("Rascunho local");
   const [error, setError] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [premiumUnlocked, setPremiumUnlocked] = useState(false);
+  const [premiumLoading, setPremiumLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
     void supabase.auth.getSession().then(({ data }) => {
-      if (active) setUserId(data.session?.user.id);
+      if (active) {
+        setUserId(data.session?.user.id);
+        if (data.session?.user.id)
+          void hasPremiumThemes(data.session.user.id).then(setPremiumUnlocked);
+      }
     });
     return () => {
       active = false;
@@ -103,6 +115,23 @@ function CreateInvitation() {
       );
     } finally {
       setPublishing(false);
+    }
+  }
+  async function buyPremiumThemes() {
+    setPremiumLoading(true);
+    setError("");
+    try {
+      const result = await startPremiumThemePurchase();
+      if (result.alreadyUnlocked) setPremiumUnlocked(true);
+      else if (result.checkoutUrl) window.location.assign(result.checkoutUrl);
+    } catch (purchaseError) {
+      setError(
+        purchaseError instanceof Error
+          ? purchaseError.message
+          : "Não foi possível iniciar o pagamento.",
+      );
+    } finally {
+      setPremiumLoading(false);
     }
   }
   function back() {
@@ -153,7 +182,15 @@ function CreateInvitation() {
         )}
         <div className="grid gap-10 lg:grid-cols-[1fr_330px]">
           <section className="min-w-0">
-            {step === 1 && <EventStep draft={draft} update={update} />}
+            {step === 1 && (
+              <EventStep
+                draft={draft}
+                update={update}
+                premiumUnlocked={premiumUnlocked}
+                onPurchase={buyPremiumThemes}
+                premiumLoading={premiumLoading}
+              />
+            )}
             {step === 2 && <MessageStep draft={draft} update={update} />}
             {step === 3 && <MediaStep draft={draft} update={update} userId={userId} />}
             {step === 4 && <LocationStep draft={draft} update={update} />}
@@ -265,7 +302,13 @@ function Heading({ eyebrow, title, text }: { eyebrow: string; title: string; tex
   );
 }
 
-function EventStep({ draft, update }: EditorProps) {
+function EventStep({
+  draft,
+  update,
+  premiumUnlocked,
+  onPurchase,
+  premiumLoading,
+}: EditorProps & { premiumUnlocked: boolean; onPurchase: () => void; premiumLoading: boolean }) {
   return (
     <>
       <Heading
@@ -303,11 +346,11 @@ function EventStep({ draft, update }: EditorProps) {
             <button
               type="button"
               key={item.name}
-              onClick={() => update("themeName", item.name)}
-              className="text-left"
+              onClick={() => (!item.premium || premiumUnlocked) && update("themeName", item.name)}
+              className={`text-left ${item.premium && !premiumUnlocked ? "cursor-not-allowed" : ""}`}
             >
               <div
-                className={`relative aspect-[0.8] overflow-hidden rounded-3xl ${item.className} p-5 transition hover:-translate-y-1 ${draft.themeName === item.name ? "ring-4 ring-[#2f5145] ring-offset-2" : ""}`}
+                className={`relative aspect-[0.8] overflow-hidden rounded-3xl ${item.className} p-5 transition ${!item.premium || premiumUnlocked ? "hover:-translate-y-1" : "opacity-60 grayscale"} ${draft.themeName === item.name ? "ring-4 ring-[#2f5145] ring-offset-2" : ""}`}
               >
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <Sparkles size={17} className="text-[#587160]" />
@@ -318,6 +361,11 @@ function EventStep({ draft, update }: EditorProps) {
                     {item.description}
                   </span>
                 </div>
+                {item.premium && !premiumUnlocked && (
+                  <span className="absolute bottom-3 left-3 rounded-full bg-[#2f5145] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                    Premium
+                  </span>
+                )}
                 {draft.themeName === item.name && (
                   <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#2f5145] text-white">
                     <Check size={15} />
@@ -327,6 +375,24 @@ function EventStep({ draft, update }: EditorProps) {
             </button>
           ))}
         </div>
+        {!premiumUnlocked && (
+          <div className="mt-5 flex flex-col justify-between gap-4 rounded-2xl border border-[#e6d3bd] bg-[#fff9f1] p-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="font-medium text-[#5f4734]">Desbloqueie todos os temas premium</p>
+              <p className="mt-1 text-sm leading-6 text-[#856f5d]">
+                Pagamento único via Mercado Pago. Cartão ou Pix, sem assinatura recorrente.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void onPurchase()}
+              disabled={premiumLoading}
+              className="inline-flex shrink-0 items-center justify-center rounded-xl bg-[#2f5145] px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {premiumLoading ? "Abrindo pagamento…" : "Comprar temas premium"}
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
