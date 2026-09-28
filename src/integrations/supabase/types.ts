@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      invitation_media: {
+        Row: {
+          created_at: string
+          id: string
+          invitation_id: string
+          media_type: string
+          metadata: Json
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitation_id: string
+          media_type: string
+          metadata?: Json
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitation_id?: string
+          media_type?: string
+          metadata?: Json
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_media_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitation_sections: {
+        Row: {
+          enabled: boolean
+          id: string
+          invitation_id: string
+          section_type: string
+          sort_order: number
+        }
+        Insert: {
+          enabled?: boolean
+          id?: string
+          invitation_id: string
+          section_type: string
+          sort_order?: number
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          invitation_id?: string
+          section_type?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_sections_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           content: Json
@@ -116,6 +186,95 @@ export type Database = {
         }
         Relationships: []
       }
+      rsvps: {
+        Row: {
+          companions: number
+          created_at: string
+          guest_name: string
+          id: string
+          invitation_id: string
+          note: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          companions?: number
+          created_at?: string
+          guest_name: string
+          id?: string
+          invitation_id: string
+          note?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          companions?: number
+          created_at?: string
+          guest_name?: string
+          id?: string
+          invitation_id?: string
+          note?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rsvps_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theme_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          payment_id: string | null
+          preference_id: string | null
+          product_key: string
+          provider: string
+          raw_data: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          preference_id?: string | null
+          product_key?: string
+          provider?: string
+          raw_data?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          preference_id?: string | null
+          product_key?: string
+          provider?: string
+          raw_data?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       themes: {
         Row: {
           active: boolean
@@ -124,8 +283,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_premium: boolean
           name: string
           preview_image: string | null
+          product_key: string | null
         }
         Insert: {
           active?: boolean
@@ -134,8 +295,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_premium?: boolean
           name: string
           preview_image?: string | null
+          product_key?: string | null
         }
         Update: {
           active?: boolean
@@ -144,8 +307,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_premium?: boolean
           name?: string
           preview_image?: string | null
+          product_key?: string | null
         }
         Relationships: []
       }
@@ -179,6 +344,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_master_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "customer"
