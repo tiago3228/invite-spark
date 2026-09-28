@@ -33,6 +33,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [error, setError] = useState("");
   const [showHowWorks, setShowHowWorks] = useState(false);
   const [invitations, setInvitations] = useState<
@@ -64,6 +65,13 @@ function Dashboard() {
           data.session.user.email?.split("@")[0] ??
           "cliente",
       );
+      const rpcClient = supabase as typeof supabase & {
+        rpc: (fn: string, args: { _user_id: string }) => Promise<{ data: boolean | null }>;
+      };
+      const { data: masterAdmin } = await rpcClient.rpc("is_master_admin", {
+        _user_id: data.session.user.id,
+      });
+      setIsMasterAdmin(Boolean(masterAdmin));
       const { data: invitationRows } = await supabase
         .from("invitations")
         .select("id, title, event_type, status, updated_at")
@@ -109,6 +117,7 @@ function Dashboard() {
   return (
     <DashboardShell
       userName={userName}
+      isMasterAdmin={isMasterAdmin}
       onSignOut={() => void signOut()}
       onHowWorks={() => setShowHowWorks(true)}
     >

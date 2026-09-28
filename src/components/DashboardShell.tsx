@@ -13,11 +13,13 @@ export function DashboardShell({
   userName,
   onSignOut,
   onHowWorks,
+  isMasterAdmin,
 }: {
   children: ReactNode;
   userName: string;
   onSignOut: () => void;
   onHowWorks: () => void;
+  isMasterAdmin?: boolean;
 }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
@@ -106,9 +108,16 @@ export function DashboardShell({
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dce9df] text-sm font-semibold text-[#2f5145]">
               {userName.slice(0, 1).toUpperCase()}
             </div>
-            <span className="hidden max-w-[120px] truncate text-sm font-medium text-[#42534a] sm:block">
-              {userName}
-            </span>
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="max-w-[120px] truncate text-sm font-medium text-[#42534a]">
+                {userName}
+              </span>
+              {isMasterAdmin && (
+                <span className="rounded-full bg-[#fff0df] px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-[#a56c36]">
+                  Master
+                </span>
+              )}
+            </div>
           </div>
         </header>
         <div className="border-b border-[#e8eee8] bg-white px-5 py-3 lg:hidden">
