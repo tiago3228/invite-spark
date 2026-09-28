@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { coverLibrary, galleryLibrary, royaltyFreeSources } from "@/data/media-library";
 import { hasPremiumThemes, startPremiumThemePurchase } from "@/lib/billing";
 import { removeInvitationFile, uploadInvitationFile, type UploadKind } from "@/lib/storage";
 import {
@@ -607,6 +608,28 @@ function MediaStep({ draft, update, userId }: EditorProps) {
               label={draft.coverUrl ? "Trocar capa" : "Enviar capa"}
             />
           </div>
+          <p className="mt-5 text-xs font-medium text-[#777a74]">
+            Ou escolha uma capa da nossa biblioteca
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {coverLibrary.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => update("coverUrl", item.url)}
+                className={`group overflow-hidden rounded-xl border text-left transition hover:-translate-y-0.5 ${draft.coverUrl === item.url ? "border-[#a76e59] ring-2 ring-[#ead9cf]" : "border-[#e8e8e3]"}`}
+              >
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  className="h-24 w-full object-cover transition group-hover:scale-105"
+                />
+                <span className="block truncate px-2 py-2 text-[11px] font-medium text-[#777a74]">
+                  {item.title}
+                </span>
+              </button>
+            ))}
+          </div>
           {draft.coverUrl && (
             <div className="mt-4 flex items-center gap-4">
               <img
@@ -639,6 +662,38 @@ function MediaStep({ draft, update, userId }: EditorProps) {
               multiple
             />
           </div>
+          <p className="mt-5 text-xs font-medium text-[#777a74]">
+            Adicione também imagens prontas à sua galeria
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {galleryLibrary.map((item) => {
+              const selected = draft.galleryUrls.includes(item.url);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() =>
+                    update(
+                      "galleryUrls",
+                      selected
+                        ? draft.galleryUrls.filter((url) => url !== item.url)
+                        : [...draft.galleryUrls, item.url],
+                    )
+                  }
+                  className={`group overflow-hidden rounded-xl border text-left transition hover:-translate-y-0.5 ${selected ? "border-[#a76e59] ring-2 ring-[#ead9cf]" : "border-[#e8e8e3]"}`}
+                >
+                  <img
+                    src={item.url}
+                    alt={item.title}
+                    className="h-24 w-full object-cover transition group-hover:scale-105"
+                  />
+                  <span className="block truncate px-2 py-2 text-[11px] font-medium text-[#777a74]">
+                    {selected ? "Adicionada" : "Adicionar"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
           {draft.galleryUrls.length > 0 && (
             <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
               {draft.galleryUrls.map((url) => (
@@ -660,6 +715,14 @@ function MediaStep({ draft, update, userId }: EditorProps) {
           <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
             <p className="font-medium text-[#3f5146]">Vídeo</p>
             <p className="mt-1 text-xs text-[#9d9d96]">MP4 ou WebM · até 15 MB</p>
+            <a
+              href={royaltyFreeSources.video.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex text-xs font-medium text-[#a76e59] hover:underline"
+            >
+              Encontrar vídeos gratuitos ↗
+            </a>
             <div className="mt-4 flex items-center gap-3">
               <FilePicker
                 kind="video"
@@ -680,6 +743,14 @@ function MediaStep({ draft, update, userId }: EditorProps) {
           <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
             <p className="font-medium text-[#3f5146]">Música</p>
             <p className="mt-1 text-xs text-[#9d9d96]">MP3, OGG ou WAV · até 15 MB</p>
+            <a
+              href={royaltyFreeSources.music.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex text-xs font-medium text-[#a76e59] hover:underline"
+            >
+              Encontrar músicas gratuitas ↗
+            </a>
             <div className="mt-4 flex items-center gap-3">
               <FilePicker
                 kind="audio"
