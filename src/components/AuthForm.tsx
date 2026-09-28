@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Eye,
+  EyeOff,
   Flower2,
   Loader2,
   Mail,
@@ -21,6 +23,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [terms, setTerms] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string }>();
   const [loading, setLoading] = useState(false);
@@ -169,12 +172,21 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 <input
                   required
                   minLength={6}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-[#e8e8e3] bg-white px-10 py-3.5 outline-none transition placeholder:text-[#a0a19a] focus:border-[#a76e59] focus:ring-4 focus:ring-[#ead9cf]"
+                  className="w-full rounded-xl border border-[#e8e8e3] bg-white px-10 py-3.5 pr-12 outline-none transition placeholder:text-[#a0a19a] focus:border-[#a76e59] focus:ring-4 focus:ring-[#ead9cf]"
                   placeholder="Mínimo de 6 caracteres"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-3 top-2.5 rounded-lg p-1.5 text-[#8f8b83] transition hover:bg-[#f5f1ed] hover:text-[#a76e59] focus:outline-none focus:ring-2 focus:ring-[#ead9cf]"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </span>
             </label>
             {isSignup && (
