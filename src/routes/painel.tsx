@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, Flower2, Loader2, LogOut, Plus, Sparkles } from "lucide-react";
 import { isSupabaseConfigured, supabase, getSupabaseSetupMessage } from "@/lib/supabase";
+import { PWAInstallButton } from "@/components/PWAInstallButton";
 
 export const Route = createFileRoute("/painel")({
   component: Dashboard,
@@ -18,6 +19,15 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const [error, setError] = useState("");
+  const [invitations, setInvitations] = useState<
+    Array<{
+      id: string;
+      title: string | null;
+      event_type: string;
+      status: string;
+      updated_at: string;
+    }>
+  >([]);
 
   useEffect(() => {
     let active = true;
@@ -38,6 +48,12 @@ function Dashboard() {
           data.session.user.email?.split("@")[0] ??
           "cliente",
       );
+      const { data: invitationRows } = await supabase
+        .from("invitations")
+        .select("id, title, event_type, status, updated_at")
+        .eq("user_id", data.session.user.id)
+        .order("updated_at", { ascending: false });
+      setInvitations((invitationRows ?? []) as typeof invitations);
       setLoading(false);
     }
     void load();
@@ -84,6 +100,7 @@ function Dashboard() {
             </span>
             <span className="font-serif text-xl">meu convite</span>
           </Link>
+          <PWAInstallButton />
           <button
             onClick={() => void signOut()}
             className="flex items-center gap-2 text-sm text-[#77736b] transition hover:text-[#2f5145]"
@@ -111,30 +128,80 @@ function Dashboard() {
           </Link>
         </div>
         <section className="mt-12 rounded-3xl border border-[#e6e0d7] bg-white p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+          {invitations.length > 0 ? (
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9b968c]">
-                <Sparkles size={14} className="text-[#bd8051]" /> Seus convites
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9b968c]">
+                    <Sparkles size={14} className="text-[#bd8051]" /> Seus convites
+                  </div>
+                  <h2 className="mt-3 font-serif text-3xl text-[#3c5145]">Seus rascunhos</h2>
+                </div>
+                <Link
+                  to="/criar"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#d9e4da] px-4 py-3 text-sm font-medium text-[#2f5145]"
+                >
+                  Novo <Plus size={15} />
+                </Link>
               </div>
-              <h2 className="mt-3 font-serif text-3xl text-[#3c5145]">Ainda não há convites.</h2>
-              <p className="mt-2 max-w-md text-sm leading-6 text-[#77736b]">
-                Comece escolhendo um modelo e transforme os detalhes do seu evento em uma
-                experiência inesquecível.
-              </p>
+              <div className="mt-6 divide-y divide-[#eeeae3]">
+                {invitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <div className="font-medium text-[#3f5146]">
+                        {invitation.title || invitation.event_type}
+                      </div>
+                      <div className="mt-1 text-xs uppercase tracking-wider text-[#9b968c]">
+                        {invitation.status === "draft" ? "Rascunho" : invitation.status}
+                      </div>
+                    </div>
+                    <Link
+                      to="/painel/$invitationId/rsvp"
+                      params={{ invitationId: invitation.id }}
+                      className="inline-flex items-center gap-2 self-start rounded-xl border border-[#d9e4da] px-4 py-2.5 text-sm font-medium text-[#2f5145]"
+                    >
+                      Ver RSVP <ArrowRight size={15} />
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
-            <Link
-              to="/criar"
-              className="inline-flex items-center gap-2 rounded-xl border border-[#d9e4da] px-4 py-3 text-sm font-medium text-[#2f5145] transition hover:bg-[#f1f6f1]"
-            >
-              Começar agora <ArrowRight size={16} />
-            </Link>
-          </div>
+          ) : (
+            <>
+              <div className="flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9b968c]">
+                    <Sparkles size={14} className="text-[#bd8051]" /> Seus convites
+                  </div>
+                  <h2 className="mt-3 font-serif text-3xl text-[#3c5145]">
+                    Ainda não há convites.
+                  </h2>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-[#77736b]">
+                    Comece escolhendo um modelo e transforme os detalhes do seu evento em uma
+                    experiência inesquecível.
+                  </p>
+                </div>
+                <Link
+                  to="/criar"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#d9e4da] px-4 py-3 text-sm font-medium text-[#2f5145] transition hover:bg-[#f1f6f1]"
+                >
+                  Começar agora <ArrowRight size={16} />
+                </Link>
+              </div>
+            </>
+          )}
         </section>
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {[
-            ["0", "Convites criados"],
-            ["0", "Publicados"],
-            ["0", "Confirmações"],
+            [String(invitations.length), "Convites criados"],
+            [
+              String(invitations.filter((item) => item.status === "published").length),
+              "Publicados",
+            ],
+            ["—", "Confirmações"],
           ].map(([value, label]) => (
             <div key={label} className="rounded-2xl border border-[#e6e0d7] bg-white p-5">
               <div className="font-serif text-3xl text-[#2f5145]">{value}</div>

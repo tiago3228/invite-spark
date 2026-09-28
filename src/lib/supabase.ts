@@ -1,14 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
-const supabaseKey =
-  (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string | undefined) ??
-  (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string | undefined);
+export { supabase };
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
-
-export const supabase = isSupabaseConfigured ? createClient(supabaseUrl!, supabaseKey!) : null;
+export const isSupabaseConfigured = Boolean(
+  import.meta.env["VITE_SUPABASE_URL"] && import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"],
+);
 
 export function getSupabaseSetupMessage() {
-  return "Conecte o projeto a um projeto Supabase no Lovable e configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY para ativar o cadastro.";
+  return "Conecte o projeto a um projeto Supabase no Lovable Cloud para ativar este recurso.";
 }

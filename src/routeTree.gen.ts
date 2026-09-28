@@ -14,6 +14,9 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as CriarRouteImport } from './routes/criar'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PainelRouteImport } from './routes/painel'
+import { Route as ConviteSlugRouteImport } from './routes/convite/$slug'
+import { Route as ConviteSlugConfirmarRouteImport } from './routes/convite/$slug/confirmar'
+import { Route as PainelInvitationIdRsvpRouteImport } from './routes/painel/$invitationId/rsvp'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,20 +43,41 @@ const PainelRoute = PainelRouteImport.update({
   path: '/painel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConviteSlugRoute = ConviteSlugRouteImport.update({
+  id: '/convite/$slug',
+  path: '/convite/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConviteSlugConfirmarRoute = ConviteSlugConfirmarRouteImport.update({
+  id: '/confirmar',
+  path: '/confirmar',
+  getParentRoute: () => ConviteSlugRoute,
+} as any)
+const PainelInvitationIdRsvpRoute = PainelInvitationIdRsvpRouteImport.update({
+  id: '/$invitationId/rsvp',
+  path: '/$invitationId/rsvp',
+  getParentRoute: () => PainelRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/criar': typeof CriarRoute
   '/login': typeof LoginRoute
-  '/painel': typeof PainelRoute
+  '/painel': typeof PainelRouteWithChildren
+  '/convite/$slug': typeof ConviteSlugRouteWithChildren
+  '/convite/$slug/confirmar': typeof ConviteSlugConfirmarRoute
+  '/painel/$invitationId/rsvp': typeof PainelInvitationIdRsvpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/criar': typeof CriarRoute
   '/login': typeof LoginRoute
-  '/painel': typeof PainelRoute
+  '/painel': typeof PainelRouteWithChildren
+  '/convite/$slug': typeof ConviteSlugRouteWithChildren
+  '/convite/$slug/confirmar': typeof ConviteSlugConfirmarRoute
+  '/painel/$invitationId/rsvp': typeof PainelInvitationIdRsvpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +85,42 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/criar': typeof CriarRoute
   '/login': typeof LoginRoute
-  '/painel': typeof PainelRoute
+  '/painel': typeof PainelRouteWithChildren
+  '/convite/$slug': typeof ConviteSlugRouteWithChildren
+  '/convite/$slug/confirmar': typeof ConviteSlugConfirmarRoute
+  '/painel/$invitationId/rsvp': typeof PainelInvitationIdRsvpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastro' | '/criar' | '/login' | '/painel'
+  fullPaths:
+    | '/'
+    | '/cadastro'
+    | '/criar'
+    | '/login'
+    | '/painel'
+    | '/convite/$slug'
+    | '/convite/$slug/confirmar'
+    | '/painel/$invitationId/rsvp'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastro' | '/criar' | '/login' | '/painel'
-  id: '__root__' | '/' | '/cadastro' | '/criar' | '/login' | '/painel'
+  to:
+    | '/'
+    | '/cadastro'
+    | '/criar'
+    | '/login'
+    | '/painel'
+    | '/convite/$slug'
+    | '/convite/$slug/confirmar'
+    | '/painel/$invitationId/rsvp'
+  id:
+    | '__root__'
+    | '/'
+    | '/cadastro'
+    | '/criar'
+    | '/login'
+    | '/painel'
+    | '/convite/$slug'
+    | '/convite/$slug/confirmar'
+    | '/painel/$invitationId/rsvp'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,7 +128,8 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   CriarRoute: typeof CriarRoute
   LoginRoute: typeof LoginRoute
-  PainelRoute: typeof PainelRoute
+  PainelRoute: typeof PainelRouteWithChildren
+  ConviteSlugRoute: typeof ConviteSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -116,15 +169,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PainelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/convite/$slug': {
+      id: '/convite/$slug'
+      path: '/convite/$slug'
+      fullPath: '/convite/$slug'
+      preLoaderRoute: typeof ConviteSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convite/$slug/confirmar': {
+      id: '/convite/$slug/confirmar'
+      path: '/confirmar'
+      fullPath: '/convite/$slug/confirmar'
+      preLoaderRoute: typeof ConviteSlugConfirmarRouteImport
+      parentRoute: typeof ConviteSlugRoute
+    }
+    '/painel/$invitationId/rsvp': {
+      id: '/painel/$invitationId/rsvp'
+      path: '/$invitationId/rsvp'
+      fullPath: '/painel/$invitationId/rsvp'
+      preLoaderRoute: typeof PainelInvitationIdRsvpRouteImport
+      parentRoute: typeof PainelRoute
+    }
   }
 }
+
+interface PainelRouteChildren {
+  PainelInvitationIdRsvpRoute: typeof PainelInvitationIdRsvpRoute
+}
+
+const PainelRouteChildren: PainelRouteChildren = {
+  PainelInvitationIdRsvpRoute: PainelInvitationIdRsvpRoute,
+}
+
+const PainelRouteWithChildren =
+  PainelRoute._addFileChildren(PainelRouteChildren)
+
+interface ConviteSlugRouteChildren {
+  ConviteSlugConfirmarRoute: typeof ConviteSlugConfirmarRoute
+}
+
+const ConviteSlugRouteChildren: ConviteSlugRouteChildren = {
+  ConviteSlugConfirmarRoute: ConviteSlugConfirmarRoute,
+}
+
+const ConviteSlugRouteWithChildren = ConviteSlugRoute._addFileChildren(
+  ConviteSlugRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CadastroRoute: CadastroRoute,
   CriarRoute: CriarRoute,
   LoginRoute: LoginRoute,
-  PainelRoute: PainelRoute,
+  PainelRoute: PainelRouteWithChildren,
+  ConviteSlugRoute: ConviteSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
