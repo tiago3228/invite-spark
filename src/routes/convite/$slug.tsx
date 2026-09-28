@@ -17,7 +17,7 @@ import { QuinzeInvite } from "@/components/QuinzeInvite";
 
 export const Route = createFileRoute("/convite/$slug")({
   component: PublicInvitation,
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { g?: string } => ({
     g: typeof s["g"] === "string" ? (s["g"] as string) : undefined,
   }),
   head: () => ({
