@@ -56,3 +56,13 @@ export const royaltyFreeSources = {
     description: "Vídeos gratuitos para inspiração e uso conforme a licença do autor.",
   },
 };
+
+export const videoLibrary: MediaLibraryItem[] = [
+  {
+    id: "quinze-anos-envelope-pop-up",
+    title: "Envelope pop-up · 15 anos",
+    category: "Abertura especial",
+    url: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663982227127/jbXfyNqUHGZBQsPc.mp4",
+    credit: "Vídeo original do cliente",
+  },
+];

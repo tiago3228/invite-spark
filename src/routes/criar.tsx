@@ -11,7 +11,12 @@ import {
   Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { coverLibrary, galleryLibrary, royaltyFreeSources } from "@/data/media-library";
+import {
+  coverLibrary,
+  galleryLibrary,
+  royaltyFreeSources,
+  videoLibrary,
+} from "@/data/media-library";
 import { hasPremiumThemes, startPremiumThemePurchase } from "@/lib/billing";
 import { removeInvitationFile, uploadInvitationFile, type UploadKind } from "@/lib/storage";
 import { playOpeningSound } from "@/lib/opening-sound";
@@ -753,7 +758,7 @@ function MediaStep({ draft, update, userId, ensureDraftId }: EditorProps) {
   }
   async function remove(url: string, kind: UploadKind) {
     try {
-      await removeInvitationFile(url);
+      if (!videoLibrary.some((item) => item.url === url)) await removeInvitationFile(url);
       if (kind === "cover") update("coverUrl", "");
       else if (kind === "image")
         update(
@@ -960,6 +965,34 @@ function MediaStep({ draft, update, userId, ensureDraftId }: EditorProps) {
                   </button>
                 </div>
               )}
+            </div>
+            <p className="mt-5 text-xs font-medium text-[#777a74]">
+              Ou escolha uma abertura pronta
+            </p>
+            <div className="mt-3 space-y-3">
+              {videoLibrary.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => update("videoUrl", item.url)}
+                  className={`w-full overflow-hidden rounded-xl border text-left transition ${draft.videoUrl === item.url ? "border-[#a76e59] ring-2 ring-[#ead9cf]" : "border-[#e8e8e3] hover:border-[#b9cdbb]"}`}
+                >
+                  <video
+                    className="aspect-video w-full bg-[#232522] object-cover"
+                    src={item.url}
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                  />
+                  <span className="block p-3">
+                    <span className="block text-sm font-medium text-[#3f5146]">{item.title}</span>
+                    <span className="mt-1 block text-xs text-[#89857e]">
+                      {draft.videoUrl === item.url ? "Selecionado" : item.credit}
+                    </span>
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
           <div className="rounded-2xl border border-[#e8e8e3] bg-white p-5">
