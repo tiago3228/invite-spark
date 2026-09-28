@@ -207,12 +207,55 @@
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
+.music-fab {
+  position: fixed;
+  right: 18px;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 40;
+  display: inline-flex;
+  height: 48px;
+  width: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  background: rgba(47, 81, 69, 0.92);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(47, 81, 69, 0.24);
+  backdrop-filter: blur(12px);
+  transition:
+    transform 180ms ease-out,
+    background 180ms ease-out,
+    box-shadow 180ms ease-out;
+}
+.music-fab:hover {
+  transform: translateY(-2px);
+  background: #233f35;
+}
+.music-fab:active {
+  transform: scale(0.96);
+}
+.music-fab.is-playing {
+  animation: music-pulse 1.8s ease-in-out infinite;
+}
+@keyframes music-pulse {
+  0%,
+  100% {
+    box-shadow: 0 10px 26px rgba(47, 81, 69, 0.24);
+  }
+  50% {
+    box-shadow: 0 10px 30px rgba(189, 128, 81, 0.42);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .invite-opening,
   .invite-opening-content,
   .invite-envelope::before,
   .invite-envelope-card {
     transition-duration: 1ms;
+  }
+  .music-fab.is-playing {
+    animation: none;
   }
 }
 

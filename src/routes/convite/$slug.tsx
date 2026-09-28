@@ -1,7 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, ChevronRight, Flower2, MapPin, Music2, Play, Sparkles } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronRight,
+  Flower2,
+  MapPin,
+  Music2,
+  Pause,
+  Play,
+  Sparkles,
+} from "lucide-react";
 import { findPublishedInvitation } from "@/lib/rsvp";
 
 export const Route = createFileRoute("/convite/$slug")({
@@ -16,6 +25,8 @@ function PublicInvitation() {
   const [invitation, setInvitation] = useState<any>();
   const [error, setError] = useState("");
   const [opened, setOpened] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
     let active = true;
     const timeout = window.setTimeout(() => {
@@ -47,15 +58,46 @@ function PublicInvitation() {
   const location = (invitation.location ?? {}) as Record<string, any>;
   const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
   const coverUrl = content["media"]?.["coverUrl"] as string | undefined;
+  const audioUrl = content["media"]?.["audioUrl"] as string | undefined;
+  function handleOpen() {
+    setOpened(true);
+    void audioRef.current?.play().catch(() => undefined);
+  }
+  function toggleMusic() {
+    if (!audioRef.current) return;
+    if (audioRef.current.paused) void audioRef.current.play().catch(() => undefined);
+    else audioRef.current.pause();
+  }
   return (
     <>
+      {audioUrl && (
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          loop
+          preload="auto"
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        />
+      )}
       <OpeningOverlay
         title={invitation.title || invitation.event_type}
         coverUrl={coverUrl}
-        audioUrl={content["media"]?.["audioUrl"] as string | undefined}
         opened={opened}
-        onOpen={() => setOpened(true)}
+        onOpen={handleOpen}
       />
+      {audioUrl && opened && (
+        <button
+          type="button"
+          onClick={toggleMusic}
+          aria-label={isPlaying ? "Pausar música" : "Reproduzir música"}
+          title={isPlaying ? "Pausar música" : "Reproduzir música"}
+          className={`music-fab ${isPlaying ? "is-playing" : ""}`}
+        >
+          {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+          <span className="sr-only">{isPlaying ? "Pausar música" : "Reproduzir música"}</span>
+        </button>
+      )}
       <main className="min-h-screen bg-[#fbfaf7] text-[#292724]">
         <section className="relative overflow-hidden bg-[#dce8dd] px-5 py-20 text-center sm:py-28">
           <div className="absolute left-8 top-10 text-[#92ad97]">
@@ -182,21 +224,14 @@ function PublicInvitation() {
 function OpeningOverlay({
   title,
   coverUrl,
-  audioUrl,
   opened,
   onOpen,
 }: {
   title: string;
   coverUrl?: string | undefined;
-  audioUrl?: string | undefined;
   opened: boolean;
   onOpen: () => void;
 }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  function openInvitation() {
-    void audioRef.current?.play().catch(() => undefined);
-    onOpen();
-  }
   return (
     <div className={`invite-opening ${opened ? "is-opening" : ""}`} aria-hidden={opened}>
       <div
@@ -204,7 +239,6 @@ function OpeningOverlay({
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
       />
       <div className="invite-opening-shade" />
-      {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
       <div className="invite-opening-content">
         <p className="invite-opening-kicker">Você está convidado</p>
         <div className="invite-envelope mt-6">
@@ -216,7 +250,7 @@ function OpeningOverlay({
             </div>
           </div>
         </div>
-        <button type="button" className="invite-opening-button" onClick={openInvitation}>
+        <button type="button" className="invite-opening-button" onClick={onOpen}>
           Clique para abrir
         </button>
       </div>
