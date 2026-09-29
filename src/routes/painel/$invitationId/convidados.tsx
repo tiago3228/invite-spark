@@ -60,7 +60,11 @@ function GuestsPage() {
 
   const load = useCallback(async () => {
     const [{ data: inv }, { data: g }] = await Promise.all([
-      db.from("invitations").select("id,title,slug,status").eq("id", invitationId).maybeSingle(),
+      db
+        .from("invitations")
+        .select("id,title,slug,status,event_date,event_time")
+        .eq("id", invitationId)
+        .maybeSingle(),
       db.from("guests").select("*").eq("invitation_id", invitationId).order("created_at"),
     ]);
     setInvitation(inv);
@@ -128,6 +132,16 @@ function GuestsPage() {
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
     if (reminder)
       void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
+  }
+  function sendEventReminder(g: Guest) {
+    const date = invitation?.event_date
+      ? new Date(`${invitation.event_date}T00:00:00`).toLocaleDateString("pt-BR")
+      : "em breve";
+    const time = invitation?.event_time ? ` às ${String(invitation.event_time).slice(0, 5)}` : "";
+    const text = `Olá, ${g.name}! Lembrete: o evento será em ${date}${time}. Confirmamos ${g.companions + 1} pessoa(s) da sua família. Esperamos vocês!`;
+    const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
+    void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
   }
   function copy(g: Guest) {
     void navigator.clipboard.writeText(linkFor(g));
@@ -379,6 +393,14 @@ function GuestsPage() {
                     className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"
                   >
                     <MessageCircle size={14} /> Enviar convite
+                  </button>
+                )}
+                {g.whatsapp && g.status === "confirmed" && (
+                  <button
+                    onClick={() => sendEventReminder(g)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs text-[#4d8060]"
+                  >
+                    <MessageCircle size={14} /> Lembrete manual
                   </button>
                 )}
                 {g.whatsapp && g.status === "pending" && (
