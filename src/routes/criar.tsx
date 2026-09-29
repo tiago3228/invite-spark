@@ -1202,21 +1202,31 @@ function RsvpStep({ draft, update }: EditorProps) {
         </div>
       )}
       {draft.rsvpMode === "whatsapp" && (
-        <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <Field label="WhatsApp">
-            <Input
-              value={draft.rsvpWhatsapp}
-              onChange={(value) => update("rsvpWhatsapp", value)}
-              placeholder="5511999999999"
-            />
-          </Field>
-          <Field label="Mensagem">
-            <Input
-              value={draft.rsvpMessage}
-              onChange={(value) => update("rsvpMessage", value)}
-              placeholder="Olá! Sou [NOME]..."
-            />
-          </Field>
+        <div className="mt-5 rounded-2xl border border-[#dce7dd] bg-[#f8fbf8] p-5">
+          <p className="text-sm font-medium text-[#3f5146]">Confirmação pelo WhatsApp</p>
+          <p className="mt-1 text-xs leading-5 text-[#777a74]">
+            O convidado receberá uma mensagem pronta no WhatsApp do organizador e poderá editar
+            antes de enviar.
+          </p>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+            <Field label="WhatsApp do organizador" hint="Inclua o DDI, por exemplo: 5511999999999.">
+              <Input
+                value={draft.rsvpWhatsapp}
+                onChange={(value) => update("rsvpWhatsapp", value)}
+                placeholder="5511999999999"
+              />
+            </Field>
+            <Field
+              label="Mensagem inicial"
+              hint="Use [NOME], [EVENTO] e [DATA] como marcadores opcionais."
+            >
+              <Textarea
+                value={draft.rsvpMessage}
+                onChange={(value) => update("rsvpMessage", value)}
+                placeholder="Olá! Sou [NOME]. Gostaria de confirmar presença no evento [EVENTO]."
+              />
+            </Field>
+          </div>
         </div>
       )}
       <label className="mt-7 flex items-center gap-3 text-sm text-[#5f5b54]">

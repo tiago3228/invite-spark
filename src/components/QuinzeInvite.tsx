@@ -1,17 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Check, Clock, Heart, MapPin, Volume2, VolumeX, X } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  Clock,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import introVideo from "@/assets/quinze-intro.mp4.asset.json";
 
 const db = supabase as any;
 type Guest = { name: string; status: string; companions: number } | null;
 
-export function QuinzeInvite({ invitation, token }: { invitation: any; token?: string | undefined }) {
+export function QuinzeInvite({
+  invitation,
+  token,
+}: {
+  invitation: any;
+  token?: string | undefined;
+}) {
   const content = (invitation.content ?? {}) as Record<string, any>;
   const location = (invitation.location ?? {}) as Record<string, any>;
   const name = invitation.title || "Aniversariante";
+  const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
+  const whatsappNumber = String(rsvp["whatsapp"] || "").replace(/\D/g, "");
+  const whatsappMessage = String(rsvp["message"] || "Olá! Gostaria de confirmar minha presença.")
+    .replaceAll("[NOME]", "")
+    .replaceAll("[EVENTO]", String(invitation.title || invitation.event_type || "seu evento"))
+    .replaceAll("[DATA]", invitation.event_date || "");
+  const whatsappUrl =
+    rsvp["mode"] === "whatsapp" && whatsappNumber
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage.trim())}`
+      : "";
   const videoUrl = content["media"]?.["videoUrl"] || introVideo.url;
   const [stage, setStage] = useState<"intro" | "card">("intro");
   const [muted, setMuted] = useState(true);
@@ -173,14 +199,16 @@ export function QuinzeInvite({ invitation, token }: { invitation: any; token?: s
         )}
 
         <div className="mt-6 grid gap-3">
-          {token && guest ? (
-            <button
-              disabled={busy}
-              onClick={() => setAsking(true)}
-              className="quinze-btn"
-            >
+          {whatsappUrl ? (
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="quinze-btn">
+              <MessageCircle size={18} /> Confirmar pelo WhatsApp
+            </a>
+          ) : token && guest ? (
+            <button disabled={busy} onClick={() => setAsking(true)} className="quinze-btn">
               <Check size={18} />
-              {answered && guest.status === "confirmed" ? "Presença confirmada" : "Confirmar presença"}
+              {answered && guest.status === "confirmed"
+                ? "Presença confirmada"
+                : "Confirmar presença"}
             </button>
           ) : (
             <Link

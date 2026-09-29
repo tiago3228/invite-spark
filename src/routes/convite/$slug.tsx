@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Flower2,
   MapPin,
+  MessageCircle,
   Music2,
   Pause,
   Play,
@@ -73,6 +74,14 @@ function PublicInvitation() {
     return <QuinzeInvite invitation={invitation} token={g} />;
   const location = (invitation.location ?? {}) as Record<string, any>;
   const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
+  const whatsappNumber = String(rsvp["whatsapp"] || "").replace(/\D/g, "");
+  const whatsappMessage = String(rsvp["message"] || "Olá! Gostaria de confirmar minha presença.")
+    .replaceAll("[NOME]", "")
+    .replaceAll("[EVENTO]", String(invitation.title || invitation.event_type || "seu evento"))
+    .replaceAll("[DATA]", invitation.event_date || "");
+  const whatsappUrl = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage.trim())}`
+    : "";
   const openingName = String(content["openingName"] || "").trim();
   const coverUrl = content["media"]?.["coverUrl"] as string | undefined;
   const audioUrl = content["media"]?.["audioUrl"] as string | undefined;
@@ -237,13 +246,14 @@ function PublicInvitation() {
               Confirmar presença
             </a>
           )}
-          {rsvp["mode"] === "whatsapp" && rsvp["rsvpWhatsapp"] && (
+          {rsvp["mode"] === "whatsapp" && whatsappUrl && (
             <a
-              href={`https://wa.me/${String(rsvp["rsvpWhatsapp"]).replace(/\D/g, "")}`}
+              href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-10 flex items-center justify-center rounded-full bg-[#2f5145] px-5 py-4 font-medium text-white"
+              className="mt-10 flex items-center justify-center gap-2 rounded-full bg-[#25d366] px-5 py-4 font-medium text-white shadow-lg shadow-[#25d366]/20"
             >
+              <MessageCircle size={19} />
               Confirmar pelo WhatsApp
             </a>
           )}
