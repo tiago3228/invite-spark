@@ -102,6 +102,20 @@ function GuestsPage() {
     };
   }, [invitationId, load]);
 
+  useEffect(() => {
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    const interval = window.setInterval(refreshIfVisible, 5000);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    window.addEventListener("focus", refreshIfVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+      window.removeEventListener("focus", refreshIfVisible);
+    };
+  }, [load]);
+
   const linkFor = (g: Guest) =>
     `${window.location.origin}/convite/${invitation?.slug}?g=${g.token}`;
 

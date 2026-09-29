@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -29,31 +29,41 @@ function RsvpDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let active = true;
-    void supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const result = await listOwnRsvps(invitationId, data.session.user.id);
-        if (active) setRows(result);
-      } catch (loadError) {
-        if (active)
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : "Não foi possível carregar as confirmações.",
-          );
-      } finally {
-        if (active) setLoading(false);
-      }
-    });
-    return () => {
-      active = false;
-    };
+  const load = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const result = await listOwnRsvps(invitationId, data.session.user.id);
+      setRows(result);
+      setError("");
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Não foi possível carregar as confirmações.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }, [invitationId]);
+
+  useEffect(() => {
+    void load();
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    const interval = window.setInterval(refreshIfVisible, 5000);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    window.addEventListener("focus", refreshIfVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+      window.removeEventListener("focus", refreshIfVisible);
+    };
+  }, [load]);
 
   const filtered = useMemo(
     () =>
