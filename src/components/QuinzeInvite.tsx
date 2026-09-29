@@ -1,21 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  CalendarDays,
-  Check,
-  Clock,
-  Heart,
-  MapPin,
-  MessageCircle,
-  Volume2,
-  VolumeX,
-  X,
-} from "lucide-react";
+import { CalendarDays, Check, Clock, Heart, MapPin, MessageCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import introVideo from "@/assets/quinze-intro.mp4.asset.json";
 
 const db = supabase as any;
+const CECILIA_UPLOADED_AUDIO_URL =
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663957888440/ahknbJwbQtzvQXtv.mp3";
 type Guest = {
   id: string;
   name: string;
@@ -46,14 +38,24 @@ export function QuinzeInvite({
       ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage.trim())}`
       : "";
   const videoUrl = content["media"]?.["videoUrl"] || introVideo.url;
+  const audioUrl =
+    content["media"]?.["audioUrl"] ||
+    (invitation.slug === "cecilia-15-anos" ? CECILIA_UPLOADED_AUDIO_URL : "");
   const [stage, setStage] = useState<"intro" | "card">("intro");
-  const [muted, setMuted] = useState(true);
   const [guest, setGuest] = useState<Guest>(null);
   const [memberNames, setMemberNames] = useState<string[]>([]);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  function openInvitation() {
+    setStage("card");
+  }
+
+  useEffect(() => {
+    if (stage === "card") void audioRef.current?.play().catch(() => undefined);
+  }, [audioUrl, stage]);
 
   useEffect(() => {
     if (!token) return;
@@ -98,10 +100,9 @@ export function QuinzeInvite({
     return (
       <div className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]">
         <video
-          ref={videoRef}
           src={videoUrl}
           autoPlay
-          muted={muted}
+          muted
           playsInline
           onEnded={() => setStage("card")}
           className="h-full w-full object-cover"
@@ -115,14 +116,7 @@ export function QuinzeInvite({
           </p>
         </div>
         <button
-          onClick={() => setMuted((m) => !m)}
-          className="absolute right-4 top-4 rounded-full bg-[var(--q-paper)]/80 p-3 text-[var(--q-deep)]"
-          aria-label={muted ? "Ativar som" : "Desativar som"}
-        >
-          {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-        </button>
-        <button
-          onClick={() => setStage("card")}
+          onClick={openInvitation}
           className="absolute bottom-10 rounded-full bg-[var(--q-deep)] px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
         >
           Abrir convite
@@ -133,164 +127,169 @@ export function QuinzeInvite({
   const answered = guest && guest.status !== "pending";
 
   return (
-    <main className="quinze-theme quinze-water min-h-screen px-4 py-8">
-      <div className="quinze-card quinze-rise mx-auto max-w-md rounded-[28px] px-6 py-10 text-center text-[var(--q-deep)] shadow-2xl">
-        {guest && (
-          <p className="text-xs uppercase tracking-[0.3em] opacity-70">Querido(a) {guest.name}</p>
-        )}
-        <h1 className="quinze-script mt-2 text-7xl leading-tight">{name}</h1>
-        <Heart className="mx-auto mt-1" size={18} />
-        <div className="mt-2 font-serif text-6xl">{content["age"] || "15"}</div>
-        <div className="quinze-script -mt-2 text-4xl">anos</div>
-        <p className="mx-auto mt-5 max-w-xs text-base leading-6">
-          {content["phrase"] || "Será uma alegria enorme compartilhar esse momento com você!"}
-        </p>
+    <>
+      {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
+      <main className="quinze-theme quinze-water min-h-screen px-4 py-8">
+        <div className="quinze-card quinze-rise mx-auto max-w-md rounded-[28px] px-6 py-10 text-center text-[var(--q-deep)] shadow-2xl">
+          {guest && (
+            <p className="text-xs uppercase tracking-[0.3em] opacity-70">Querido(a) {guest.name}</p>
+          )}
+          <h1 className="quinze-script mt-2 text-7xl leading-tight">{name}</h1>
+          <Heart className="mx-auto mt-1" size={18} />
+          <div className="mt-2 font-serif text-6xl">{content["age"] || "15"}</div>
+          <div className="quinze-script -mt-2 text-4xl">anos</div>
+          <p className="mx-auto mt-5 max-w-xs text-base leading-6">
+            {content["phrase"] || "Será uma alegria enorme compartilhar esse momento com você!"}
+          </p>
 
-        <div className="mt-7 grid grid-cols-2 gap-4 border-y border-[var(--q-deep)]/20 py-5 text-left text-sm">
-          <div className="flex gap-2">
-            <CalendarDays size={22} className="shrink-0" />
-            <div>
-              <div className="font-serif text-2xl leading-none">
-                {date ? date.getDate().toString().padStart(2, "0") : "--"}
-              </div>
-              <div className="uppercase">
-                {date?.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-              </div>
-              <div className="text-xs uppercase tracking-widest opacity-70">
-                {date?.toLocaleDateString("pt-BR", { weekday: "long" })}
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Clock size={22} className="shrink-0" />
-            <div>
-              <div className="font-serif text-2xl leading-none">{time || "--"}</div>
-              <div className="text-xs uppercase tracking-widest opacity-70">horas</div>
-            </div>
-          </div>
-          {location["venueName"] && (
-            <div className="col-span-2 flex gap-2">
-              <MapPin size={22} className="shrink-0" />
+          <div className="mt-7 grid grid-cols-2 gap-4 border-y border-[var(--q-deep)]/20 py-5 text-left text-sm">
+            <div className="flex gap-2">
+              <CalendarDays size={22} className="shrink-0" />
               <div>
-                <div className="font-semibold uppercase">{location["venueName"]}</div>
-                <div className="opacity-80">{location["address"]}</div>
+                <div className="font-serif text-2xl leading-none">
+                  {date ? date.getDate().toString().padStart(2, "0") : "--"}
+                </div>
+                <div className="uppercase">
+                  {date?.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+                </div>
+                <div className="text-xs uppercase tracking-widest opacity-70">
+                  {date?.toLocaleDateString("pt-BR", { weekday: "long" })}
+                </div>
               </div>
+            </div>
+            <div className="flex gap-2">
+              <Clock size={22} className="shrink-0" />
+              <div>
+                <div className="font-serif text-2xl leading-none">{time || "--"}</div>
+                <div className="text-xs uppercase tracking-widest opacity-70">horas</div>
+              </div>
+            </div>
+            {location["venueName"] && (
+              <div className="col-span-2 flex gap-2">
+                <MapPin size={22} className="shrink-0" />
+                <div>
+                  <div className="font-semibold uppercase">{location["venueName"]}</div>
+                  <div className="opacity-80">{location["address"]}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {content["dressCode"] && (
+            <div className="mt-5 rounded-2xl bg-[var(--q-paper)] p-4 text-left">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
+                Tipo de traje
+              </p>
+              <p className="mt-2 font-serif text-xl">{content["dressCode"]}</p>
             </div>
           )}
-        </div>
 
-        {content["dressCode"] && (
-          <div className="mt-5 rounded-2xl bg-[var(--q-paper)] p-4 text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
-              Tipo de traje
-            </p>
-            <p className="mt-2 font-serif text-xl">{content["dressCode"]}</p>
-          </div>
-        )}
+          {content["note"] && (
+            <p className="mt-5 text-xs font-medium uppercase tracking-[0.2em]">{content["note"]}</p>
+          )}
 
-        {content["note"] && (
-          <p className="mt-5 text-xs font-medium uppercase tracking-[0.2em]">{content["note"]}</p>
-        )}
-
-        {msg && (
-          <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm font-medium">{msg}</div>
-        )}
-
-        {asking && (
-          <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm">
-            <label className="block font-medium">Informe os nomes de quem vai comparecer</label>
-            <p className="mt-1 text-xs opacity-70">
-              Este convite permite até {guest?.party_limit ?? 1} pessoa(s).
-            </p>
-            <div className="mt-2 space-y-2">
-              {memberNames.map((memberName, index) => (
-                <input
-                  key={index}
-                  required
-                  value={memberName}
-                  onChange={(event) =>
-                    setMemberNames((current) =>
-                      current.map((value, currentIndex) =>
-                        currentIndex === index ? event.target.value : value,
-                      ),
-                    )
-                  }
-                  placeholder={index === 0 ? "Seu nome completo" : `Nome da pessoa ${index + 1}`}
-                  className="w-full rounded-xl border border-[var(--q-deep)]/30 bg-transparent px-3 py-2"
-                />
-              ))}
+          {msg && (
+            <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm font-medium">
+              {msg}
             </div>
-            {(guest?.party_limit ?? 1) > memberNames.length && (
+          )}
+
+          {asking && (
+            <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm">
+              <label className="block font-medium">Informe os nomes de quem vai comparecer</label>
+              <p className="mt-1 text-xs opacity-70">
+                Este convite permite até {guest?.party_limit ?? 1} pessoa(s).
+              </p>
+              <div className="mt-2 space-y-2">
+                {memberNames.map((memberName, index) => (
+                  <input
+                    key={index}
+                    required
+                    value={memberName}
+                    onChange={(event) =>
+                      setMemberNames((current) =>
+                        current.map((value, currentIndex) =>
+                          currentIndex === index ? event.target.value : value,
+                        ),
+                      )
+                    }
+                    placeholder={index === 0 ? "Seu nome completo" : `Nome da pessoa ${index + 1}`}
+                    className="w-full rounded-xl border border-[var(--q-deep)]/30 bg-transparent px-3 py-2"
+                  />
+                ))}
+              </div>
+              {(guest?.party_limit ?? 1) > memberNames.length && (
+                <button
+                  type="button"
+                  onClick={() => setMemberNames((current) => [...current, ""])}
+                  className="mt-2 text-sm font-semibold underline"
+                >
+                  + Adicionar outra pessoa
+                </button>
+              )}
               <button
-                type="button"
-                onClick={() => setMemberNames((current) => [...current, ""])}
-                className="mt-2 text-sm font-semibold underline"
+                disabled={busy}
+                onClick={() => respond("confirmed")}
+                className="mt-3 w-full rounded-xl bg-[var(--q-deep)] py-3 font-semibold text-[var(--q-paper)]"
               >
-                + Adicionar outra pessoa
+                {busy ? "Enviando..." : "Confirmar"}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-6 grid gap-3">
+            {whatsappUrl ? (
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="quinze-btn">
+                <MessageCircle size={18} /> Confirmar pelo WhatsApp
+              </a>
+            ) : token && guest ? (
+              <button disabled={busy} onClick={() => setAsking(true)} className="quinze-btn">
+                <Check size={18} />
+                {answered && guest.status === "confirmed"
+                  ? "Presença confirmada"
+                  : "Confirmar presença"}
+              </button>
+            ) : (
+              <Link
+                to="/convite/$slug/confirmar"
+                params={{ slug: invitation.slug }}
+                search={{ status: "confirmed" }}
+                className="quinze-btn"
+              >
+                <Check size={18} /> Confirmar presença e informar WhatsApp
+              </Link>
+            )}
+            {location["mapsUrl"] && (
+              <a href={location["mapsUrl"]} target="_blank" rel="noreferrer" className="quinze-btn">
+                <MapPin size={18} /> Ver mapa do local
+              </a>
+            )}
+            {token && guest && (
+              <button
+                disabled={busy}
+                onClick={() => respond("declined")}
+                className="quinze-btn quinze-btn-outline"
+              >
+                <X size={18} /> Não poderei comparecer
               </button>
             )}
-            <button
-              disabled={busy}
-              onClick={() => respond("confirmed")}
-              className="mt-3 w-full rounded-xl bg-[var(--q-deep)] py-3 font-semibold text-[var(--q-paper)]"
-            >
-              {busy ? "Enviando..." : "Confirmar"}
-            </button>
+            {!token && !whatsappUrl && (
+              <Link
+                to="/convite/$slug/confirmar"
+                params={{ slug: invitation.slug }}
+                search={{ status: "declined" }}
+                className="quinze-btn quinze-btn-outline"
+              >
+                <X size={18} /> Não poderei comparecer
+              </Link>
+            )}
           </div>
-        )}
 
-        <div className="mt-6 grid gap-3">
-          {whatsappUrl ? (
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="quinze-btn">
-              <MessageCircle size={18} /> Confirmar pelo WhatsApp
-            </a>
-          ) : token && guest ? (
-            <button disabled={busy} onClick={() => setAsking(true)} className="quinze-btn">
-              <Check size={18} />
-              {answered && guest.status === "confirmed"
-                ? "Presença confirmada"
-                : "Confirmar presença"}
-            </button>
-          ) : (
-            <Link
-              to="/convite/$slug/confirmar"
-              params={{ slug: invitation.slug }}
-              search={{ status: "confirmed" }}
-              className="quinze-btn"
-            >
-              <Check size={18} /> Confirmar presença e informar WhatsApp
-            </Link>
-          )}
-          {location["mapsUrl"] && (
-            <a href={location["mapsUrl"]} target="_blank" rel="noreferrer" className="quinze-btn">
-              <MapPin size={18} /> Ver mapa do local
-            </a>
-          )}
-          {token && guest && (
-            <button
-              disabled={busy}
-              onClick={() => respond("declined")}
-              className="quinze-btn quinze-btn-outline"
-            >
-              <X size={18} /> Não poderei comparecer
-            </button>
-          )}
-          {!token && !whatsappUrl && (
-            <Link
-              to="/convite/$slug/confirmar"
-              params={{ slug: invitation.slug }}
-              search={{ status: "declined" }}
-              className="quinze-btn quinze-btn-outline"
-            >
-              <X size={18} /> Não poderei comparecer
-            </Link>
-          )}
+          <p className="quinze-script mt-8 text-3xl leading-tight">
+            {content["closing"] || "Sua presença torna esta festa ainda mais especial!"}
+          </p>
         </div>
-
-        <p className="quinze-script mt-8 text-3xl leading-tight">
-          {content["closing"] || "Sua presença torna esta festa ainda mais especial!"}
-        </p>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
