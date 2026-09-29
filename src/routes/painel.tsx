@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -22,7 +22,7 @@ import { supabase, getSupabaseSetupMessage } from "@/lib/supabase";
 import { DashboardShell } from "@/components/DashboardShell";
 
 export const Route = createFileRoute("/painel")({
-  component: Dashboard,
+  component: DashboardRoute,
   head: () => ({
     meta: [
       { title: "Meu painel | Meu Convite" },
@@ -30,6 +30,11 @@ export const Route = createFileRoute("/painel")({
     ],
   }),
 });
+
+function DashboardRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return pathname === "/painel" ? <Dashboard /> : <Outlet />;
+}
 
 function Dashboard() {
   const navigate = useNavigate();
