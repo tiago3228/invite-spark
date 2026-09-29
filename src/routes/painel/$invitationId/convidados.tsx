@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Clock, Copy, Loader2, MessageCircle, Plus, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  Clock,
+  Copy,
+  Loader2,
+  MessageCircle,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const db = supabase as any;
@@ -39,7 +49,7 @@ function GuestsPage() {
   const [filter, setFilter] = useState<"all" | Guest["status"]>("all");
   const [copied, setCopied] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const [{ data: inv }, { data: g }] = await Promise.all([
       db.from("invitations").select("id,title,slug,status").eq("id", invitationId).maybeSingle(),
       db.from("guests").select("*").eq("invitation_id", invitationId).order("created_at"),
@@ -47,10 +57,31 @@ function GuestsPage() {
     setInvitation(inv);
     setGuests(g ?? []);
     setLoading(false);
-  }
+  }, [invitationId]);
+
   useEffect(() => {
     void load();
-  }, [invitationId]);
+  }, [load]);
+
+  useEffect(() => {
+    const channel = db
+      .channel(`invitation-guests-${invitationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "guests",
+          filter: `invitation_id=eq.${invitationId}`,
+        },
+        () => void load(),
+      )
+      .subscribe();
+
+    return () => {
+      void db.removeChannel(channel);
+    };
+  }, [invitationId, load]);
 
   const linkFor = (g: Guest) =>
     `${window.location.origin}/convite/${invitation?.slug}?g=${g.token}`;
@@ -77,7 +108,8 @@ function GuestsPage() {
       : `Olá ${g.name}! Você está convidado(a) para ${invitation?.title}. Abra seu convite: ${linkFor(g)}`;
     const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
-    if (reminder) void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
+    if (reminder)
+      void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
   }
   function copy(g: Guest) {
     void navigator.clipboard.writeText(linkFor(g));
@@ -171,7 +203,10 @@ function GuestsPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => copy(g)} className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs">
+                <button
+                  onClick={() => copy(g)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"
+                >
                   <Copy size={14} /> {copied === g.id ? "Copiado!" : "Copiar link"}
                 </button>
                 {g.whatsapp && (
@@ -190,7 +225,11 @@ function GuestsPage() {
                     <MessageCircle size={14} /> Lembrar
                   </button>
                 )}
-                <button onClick={() => remove(g.id)} aria-label="Remover" className="rounded-lg border border-border px-2 py-2">
+                <button
+                  onClick={() => remove(g.id)}
+                  aria-label="Remover"
+                  className="rounded-lg border border-border px-2 py-2"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>

@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleHelp,
+  ExternalLink,
   Flower2,
   Globe2,
   Loader2,
@@ -13,6 +14,7 @@ import {
   Plus,
   Share2,
   Sparkles,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -36,10 +38,12 @@ function Dashboard() {
   const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [error, setError] = useState("");
   const [showHowWorks, setShowHowWorks] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [invitations, setInvitations] = useState<
     Array<{
       id: string;
       title: string | null;
+      slug: string | null;
       event_type: string;
       status: string;
       updated_at: string;
@@ -75,7 +79,7 @@ function Dashboard() {
       setIsMasterAdmin(Boolean(masterAdmin));
       const { data: invitationRows } = await supabase
         .from("invitations")
-        .select("id, title, event_type, status, updated_at, content")
+        .select("id, title, event_type, status, updated_at, content, slug")
         .eq("user_id", data.session.user.id)
         .order("updated_at", { ascending: false });
       setInvitations((invitationRows ?? []) as typeof invitations);
@@ -90,6 +94,22 @@ function Dashboard() {
   async function signOut() {
     await supabase?.auth.signOut();
     await navigate({ to: "/" });
+  }
+
+  async function deleteInvitation(invitation: (typeof invitations)[number]) {
+    const name = invitation.title || invitation.event_type || "este convite";
+    if (!window.confirm(`Excluir ${name}? Esta ação não pode ser desfeita.`)) return;
+    setDeletingId(invitation.id);
+    const { error: deleteError } = await supabase
+      .from("invitations")
+      .delete()
+      .eq("id", invitation.id);
+    setDeletingId(null);
+    if (deleteError) {
+      setError("Não foi possível excluir o convite. Tente novamente.");
+      return;
+    }
+    setInvitations((current) => current.filter((item) => item.id !== invitation.id));
   }
 
   if (loading)
@@ -250,6 +270,25 @@ function Dashboard() {
                   >
                     Convidados e links
                   </Link>
+                  {invitation.slug && invitation.status === "published" && (
+                    <a
+                      href={`/convite/${encodeURIComponent(invitation.slug)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#2f5145]"
+                    >
+                      <ExternalLink size={14} /> Ver convite
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void deleteInvitation(invitation)}
+                    disabled={deletingId === invitation.id}
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#f0d4cc] px-3 py-2 text-xs font-semibold text-[#9b4e3c] disabled:opacity-50"
+                  >
+                    <Trash2 size={14} />
+                    {deletingId === invitation.id ? "Excluindo…" : "Excluir"}
+                  </button>
                 </div>
               </div>
             ))}
