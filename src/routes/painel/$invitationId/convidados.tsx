@@ -1,18 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Check,
   Clock,
   Copy,
+  Download,
+  FileSpreadsheet,
   Loader2,
   MessageCircle,
   Plus,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
 
 const db = supabase as any;
 
@@ -48,6 +52,9 @@ function GuestsPage() {
   const [phone, setPhone] = useState("");
   const [filter, setFilter] = useState<"all" | Guest["status"]>("all");
   const [copied, setCopied] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     const [{ data: inv }, { data: g }] = await Promise.all([
@@ -117,6 +124,93 @@ function GuestsPage() {
     setTimeout(() => setCopied(""), 1500);
   }
 
+  function exportGuests(format: "csv" | "xlsx") {
+    const rows = guests.map((guest) => ({
+      Nome: guest.name,
+      WhatsApp: guest.whatsapp,
+      Status:
+        guest.status === "confirmed"
+          ? "Confirmado"
+          : guest.status === "declined"
+            ? "Não poderá comparecer"
+            : "Pendente",
+      Acompanhantes: guest.companions,
+      Total_de_pessoas: guest.companions + (guest.status === "confirmed" ? 1 : 0),
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    sheet["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 26 }, { wch: 16 }, { wch: 18 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "Convidados");
+    const baseName = (invitation?.title || "lista-de-convidados")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/(^-|-$)/g, "")
+      .toLowerCase();
+    XLSX.writeFile(workbook, `${baseName || "convidados"}.${format === "csv" ? "csv" : "xlsx"}`, {
+      bookType: format === "csv" ? "csv" : "xlsx",
+    });
+  }
+
+  async function importGuests(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    setImportMessage("");
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) throw new Error("A planilha não possui nenhuma aba.");
+      const firstSheet = workbook.Sheets[firstSheetName];
+      if (!firstSheet) throw new Error("Não foi possível ler a primeira aba da planilha.");
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, { defval: "" });
+      const records = rows
+        .map((row) => {
+          const value = (keys: string[]) => {
+            const key = Object.keys(row).find((candidate) =>
+              keys.includes(candidate.trim().toLowerCase()),
+            );
+            return key ? String(row[key] ?? "").trim() : "";
+          };
+          const statusText = value(["status", "situação", "situacao"]);
+          const normalizedStatus = statusText.toLowerCase();
+          const status: Guest["status"] =
+            normalizedStatus.includes("não") ||
+            normalizedStatus.includes("nao") ||
+            normalizedStatus.includes("declin")
+              ? "declined"
+              : normalizedStatus.includes("confirm")
+                ? "confirmed"
+                : "pending";
+          const companionsText = value(["acompanhantes", "acompanhante", "companions"]);
+          const companions = Math.max(0, Math.min(20, Number.parseInt(companionsText, 10) || 0));
+          return {
+            invitation_id: invitationId,
+            name: value(["nome", "name"]).slice(0, 160),
+            whatsapp: value(["whatsapp", "telefone", "phone"]).replace(/\D/g, ""),
+            status,
+            companions: status === "confirmed" ? companions : 0,
+            responded_at: status === "pending" ? null : new Date().toISOString(),
+          };
+        })
+        .filter((record) => record.name);
+      if (!records.length) throw new Error("Nenhuma linha com a coluna Nome foi encontrada.");
+      if (records.length > 500) throw new Error("Importe no máximo 500 convidados por vez.");
+      const { error } = await db.from("guests").insert(records);
+      if (error) throw error;
+      setImportMessage(`${records.length} convidado(s) importado(s) com sucesso.`);
+      await load();
+    } catch (error) {
+      setImportMessage(
+        error instanceof Error ? error.message : "Não foi possível importar o arquivo.",
+      );
+    } finally {
+      setImporting(false);
+    }
+  }
+
   const counts = useMemo(
     () => ({
       confirmed: guests.filter((g) => g.status === "confirmed").length,
@@ -142,6 +236,40 @@ function GuestsPage() {
           <ArrowLeft size={16} /> Voltar ao painel
         </Link>
         <h1 className="mt-4 font-serif text-4xl">Convidados · {invitation?.title}</h1>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => exportGuests("csv")}
+            disabled={!guests.length}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold disabled:opacity-50"
+          >
+            <Download size={15} /> Exportar CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => exportGuests("xlsx")}
+            disabled={!guests.length}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold disabled:opacity-50"
+          >
+            <FileSpreadsheet size={15} /> Exportar Excel
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importing}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            <Upload size={15} /> {importing ? "Importando…" : "Importar CSV/Excel"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={(event) => void importGuests(event)}
+            className="hidden"
+          />
+        </div>
+        {importMessage && <p className="mt-3 text-sm text-muted-foreground">{importMessage}</p>}
         {invitation?.status !== "published" && (
           <p className="mt-3 rounded-xl bg-muted p-3 text-sm">
             Este convite ainda não foi publicado. Os links só funcionam depois da publicação.
