@@ -32,14 +32,14 @@ export async function submitRsvp(input: {
   companions: number;
   note: string;
 }) {
-  const { error } = await db.from("rsvps").insert({
-    invitation_id: input.invitationId,
-    guest_name: input.guestName.trim(),
-    status: input.status,
-    companions: input.companions,
-    note: input.note.trim() || null,
+  const { data, error } = await db.rpc("submit_guest_response", {
+    _invitation_id: input.invitationId,
+    _name: input.guestName.trim(),
+    _status: input.status,
+    _companions: input.companions,
   });
   if (error) throw error;
+  if (!data) throw new Error("Não foi possível registrar sua resposta.");
 }
 
 export async function listOwnRsvps(invitationId: string, userId: string): Promise<Rsvp[]> {
@@ -52,10 +52,18 @@ export async function listOwnRsvps(invitationId: string, userId: string): Promis
   if (invitationError) throw invitationError;
   if (!invitation) return [];
   const { data, error } = await db
-    .from("rsvps")
-    .select("id, invitation_id, guest_name, status, companions, note, created_at")
+    .from("guests")
+    .select("id, invitation_id, name, status, companions, created_at, responded_at")
     .eq("invitation_id", invitationId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Rsvp[];
+  return (data ?? []).map((guest: any) => ({
+    id: guest.id,
+    invitation_id: guest.invitation_id,
+    guest_name: guest.name,
+    status: guest.status,
+    companions: guest.companions ?? 0,
+    note: null,
+    created_at: guest.responded_at ?? guest.created_at,
+  })) as Rsvp[];
 }

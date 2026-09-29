@@ -227,12 +227,33 @@ function PublicInvitation() {
               <p className="mt-2 text-sm text-white/65">
                 Confirme sua presença para nos ajudar a preparar tudo.
               </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {location["mapsUrl"] && (
+                  <a
+                    href={location["mapsUrl"]}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                  >
+                    <MapPin size={16} /> Ver mapa do local
+                  </a>
+                )}
+                <Link
+                  to="/convite/$slug/confirmar"
+                  params={{ slug }}
+                  search={{ status: "confirmed" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-[#2f5145]"
+                >
+                  Confirmar presença <ChevronRight size={16} />
+                </Link>
+              </div>
               <Link
                 to="/convite/$slug/confirmar"
                 params={{ slug }}
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-medium text-[#2f5145]"
+                search={{ status: "declined" }}
+                className="mt-3 inline-flex items-center justify-center rounded-full border border-white/30 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
               >
-                Confirmar presença <ChevronRight size={16} />
+                Não poderei comparecer
               </Link>
             </div>
           )}

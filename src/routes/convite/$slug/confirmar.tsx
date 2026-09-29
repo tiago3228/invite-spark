@@ -6,6 +6,9 @@ import { findPublishedInvitation, submitRsvp, type RsvpStatus } from "@/lib/rsvp
 
 export const Route = createFileRoute("/convite/$slug/confirmar")({
   component: ConfirmPresence,
+  validateSearch: (s: Record<string, unknown>): { status?: RsvpStatus } => ({
+    status: s["status"] === "declined" ? "declined" : "confirmed",
+  }),
   head: () => ({
     meta: [
       { title: "Confirmar presença | Meu Convite" },
@@ -16,9 +19,10 @@ export const Route = createFileRoute("/convite/$slug/confirmar")({
 
 function ConfirmPresence() {
   const { slug } = Route.useParams();
+  const search = Route.useSearch();
   const [invitation, setInvitation] = useState<any>();
   const [guestName, setGuestName] = useState("");
-  const [status, setStatus] = useState<RsvpStatus>("confirmed");
+  const [status, setStatus] = useState<RsvpStatus>(search.status ?? "confirmed");
   const [companions, setCompanions] = useState(0);
   const [note, setNote] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
