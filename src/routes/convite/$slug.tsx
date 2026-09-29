@@ -73,6 +73,7 @@ function PublicInvitation() {
   if (content["template"] === "quinze-piscina" || invitation.event_type === "15 anos")
     return <QuinzeInvite invitation={invitation} token={g} />;
   const location = (invitation.location ?? {}) as Record<string, any>;
+  const dressCode = String(content["dressCode"] || "").trim();
   const rsvp = (invitation.rsvp_config ?? {}) as Record<string, any>;
   const whatsappNumber = String(rsvp["whatsapp"] || "").replace(/\D/g, "");
   const whatsappMessage = String(rsvp["message"] || "Olá! Gostaria de confirmar minha presença.")
@@ -172,6 +173,14 @@ function PublicInvitation() {
             <p className="text-center font-serif text-xl leading-8 text-[#5d5a53]">
               {content["description"]}
             </p>
+          )}
+          {dressCode && (
+            <div className="mt-8 rounded-2xl border border-[#e6e0d7] bg-[#fff8ed] p-5 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#bd8051]">
+                Tipo de traje
+              </p>
+              <p className="mt-2 font-serif text-xl text-[#4e4a43]">{dressCode}</p>
+            </div>
           )}
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
             {location["venueName"] && (

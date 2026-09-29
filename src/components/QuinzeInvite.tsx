@@ -179,6 +179,15 @@ export function QuinzeInvite({
           )}
         </div>
 
+        {content["dressCode"] && (
+          <div className="mt-5 rounded-2xl bg-[var(--q-paper)] p-4 text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
+              Tipo de traje
+            </p>
+            <p className="mt-2 font-serif text-xl">{content["dressCode"]}</p>
+          </div>
+        )}
+
         {content["note"] && (
           <p className="mt-5 text-xs font-medium uppercase tracking-[0.2em]">{content["note"]}</p>
         )}

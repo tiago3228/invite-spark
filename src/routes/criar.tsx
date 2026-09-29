@@ -1,14 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Download,
   Flower2,
   Loader2,
   MapPin,
   Save,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -132,6 +134,7 @@ function CreateInvitation() {
   const [publishing, setPublishing] = useState(false);
   const [premiumUnlocked, setPremiumUnlocked] = useState(false);
   const [premiumLoading, setPremiumLoading] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -182,6 +185,44 @@ function CreateInvitation() {
 
   function update<K extends keyof InvitationDraft>(key: K, value: InvitationDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+  }
+  function exportInvitation() {
+    const { id: _id, userId: _userId, status: _status, ...portableDraft } = draft;
+    const payload = {
+      format: "meu-convite",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      invitation: portableDraft,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${(draft.title || "meu-convite").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.meu-convite.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+  async function importInvitation(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text()) as { invitation?: Partial<InvitationDraft> };
+      const imported = parsed.invitation ?? parsed;
+      if (!imported || typeof imported !== "object") throw new Error("Arquivo inválido.");
+      const {
+        id: _id,
+        userId: _userId,
+        status: _status,
+        ...portableDraft
+      } = imported as Partial<InvitationDraft>;
+      setDraft({ ...emptyDraft, ...portableDraft });
+      setStep(1);
+      setSaveState("Convite importado; salvando…");
+      setError("");
+    } catch {
+      setError("Não foi possível importar este arquivo de convite.");
+    }
   }
   async function ensureDraftId() {
     if (!userId || !draft.eventType) return undefined;
@@ -271,6 +312,27 @@ function CreateInvitation() {
             <span className="font-serif text-xl">meu convite</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-[#9d9d96]">
+            <button
+              type="button"
+              onClick={exportInvitation}
+              className="hidden items-center gap-1 rounded-full border border-[#dce7dd] px-3 py-1.5 text-[#5d7a67] transition hover:bg-[#eaf2eb] sm:inline-flex"
+            >
+              <Download size={13} /> Exportar
+            </button>
+            <button
+              type="button"
+              onClick={() => importInputRef.current?.click()}
+              className="hidden items-center gap-1 rounded-full border border-[#dce7dd] px-3 py-1.5 text-[#5d7a67] transition hover:bg-[#eaf2eb] sm:inline-flex"
+            >
+              <Upload size={13} /> Importar
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => void importInvitation(event)}
+              className="hidden"
+            />
             <Save size={14} className="text-[#7e9c86]" /> {saveState}
           </div>
         </div>
@@ -667,7 +729,13 @@ function MessageStep({ draft, update }: EditorProps) {
     "Preparamos tudo com muito carinho e esperamos compartilhar esse dia inesquecível com você.",
     "Sua presença tornará nossa celebração ainda mais completa. Venha comemorar conosco!",
   ];
-  const dressCodeSuggestions = ["Esporte fino", "Traje social", "Traje casual", "Livre"];
+  const dressCodeSuggestions = [
+    "Esporte fino",
+    "Traje social",
+    "Traje casual",
+    "Traje de banho e toalha",
+    "Livre",
+  ];
   async function generateCopy() {
     setGeneratingCopy(true);
     setCopyError("");
