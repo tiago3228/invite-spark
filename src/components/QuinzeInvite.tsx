@@ -42,14 +42,22 @@ export function QuinzeInvite({
     content["media"]?.["audioUrl"] ||
     (invitation.slug === "cecilia-15-anos" ? CECILIA_UPLOADED_AUDIO_URL : "");
   const [stage, setStage] = useState<"intro" | "card">("intro");
+  const [introStarted, setIntroStarted] = useState(false);
   const [guest, setGuest] = useState<Guest>(null);
   const [memberNames, setMemberNames] = useState<string[]>([]);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const audioRef = useRef<HTMLAudioElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  function openInvitation() {
+  function startIntro() {
+    setIntroStarted(true);
+    void audioRef.current?.play().catch(() => undefined);
+    window.requestAnimationFrame(() => void videoRef.current?.play().catch(() => undefined));
+  }
+
+  function skipIntro() {
     setStage("card");
   }
 
@@ -98,30 +106,43 @@ export function QuinzeInvite({
 
   if (stage === "intro")
     return (
-      <div className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]">
-        <video
-          src={videoUrl}
-          autoPlay
-          muted
-          playsInline
-          onEnded={() => setStage("card")}
-          className="h-full w-full object-cover"
-        />
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-transparent to-[var(--q-deep)]/60">
-          <h1 className="quinze-script quinze-rise text-7xl text-[var(--q-paper)] drop-shadow-lg sm:text-8xl">
-            {name}
-          </h1>
-          <p className="quinze-rise-late mt-2 font-serif text-2xl text-[var(--q-paper)] drop-shadow">
-            {content["age"] || "15"} anos
-          </p>
+      <>
+        {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
+        <div className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]">
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            autoPlay={introStarted}
+            muted
+            playsInline
+            onEnded={() => setStage("card")}
+            className="h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-transparent to-[var(--q-deep)]/60">
+            <h1 className="quinze-script quinze-rise text-7xl text-[var(--q-paper)] drop-shadow-lg sm:text-8xl">
+              {name}
+            </h1>
+            <p className="quinze-rise-late mt-2 font-serif text-2xl text-[var(--q-paper)] drop-shadow">
+              {content["age"] || "15"} anos
+            </p>
+          </div>
+          {!introStarted ? (
+            <button
+              onClick={startIntro}
+              className="absolute bottom-10 rounded-full bg-[var(--q-deep)] px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
+            >
+              Iniciar abertura com música
+            </button>
+          ) : (
+            <button
+              onClick={skipIntro}
+              className="absolute bottom-10 rounded-full bg-[var(--q-deep)]/85 px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
+            >
+              Ir direto ao convite
+            </button>
+          )}
         </div>
-        <button
-          onClick={openInvitation}
-          className="absolute bottom-10 rounded-full bg-[var(--q-deep)] px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
-        >
-          Abrir convite
-        </button>
-      </div>
+      </>
     );
 
   const answered = guest && guest.status !== "pending";
