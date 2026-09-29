@@ -19,13 +19,18 @@ export function env(name: string) {
 
 export async function mercadoPagoRequest(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${env("MERCADO_PAGO_ACCESS_TOKEN")}`);
+  const accessToken =
+    Deno.env.get("MERCADOPAGO_PROD_ACCESS_TOKEN") ?? Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+  if (!accessToken) throw new Error("Missing environment variable: MERCADOPAGO_PROD_ACCESS_TOKEN");
+  headers.set("Authorization", `Bearer ${accessToken}`);
   headers.set("Content-Type", "application/json");
   return fetch(`https://api.mercadopago.com${path}`, { ...init, headers });
 }
 
 export async function verifyMercadoPagoSignature(request: Request, dataId: string) {
-  const secret = env("MERCADO_PAGO_WEBHOOK_SECRET");
+  const secret =
+    Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET") ?? Deno.env.get("MERCADO_PAGO_WEBHOOK_SECRET");
+  if (!secret) throw new Error("Missing environment variable: MERCADOPAGO_WEBHOOK_SECRET");
   const xSignature = request.headers.get("x-signature") ?? "";
   const requestId = request.headers.get("x-request-id") ?? "";
   const parts = Object.fromEntries(xSignature.split(",").map((part) => part.trim().split("=")));

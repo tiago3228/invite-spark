@@ -21,7 +21,7 @@ O frontend nunca recebe o Access Token nem libera o tema por retorno de navegado
 1. Acesse **Mercado Pago Developers > Suas integrações**.
 2. Crie ou selecione uma aplicação para o projeto.
 3. Copie o **Access Token** do ambiente de teste inicialmente.
-4. Em Webhooks, crie/configure a chave secreta da aplicação e copie o `MERCADO_PAGO_WEBHOOK_SECRET`.
+4. Em Webhooks, crie/configure a chave secreta da aplicação e copie o `MERCADOPAGO_WEBHOOK_SECRET`.
 5. Habilite o evento **Payments / payment**.
 
 O código usa Checkout Pro e não usa `preapproval`, `preapproval_plan` ou qualquer endpoint de assinatura.
@@ -47,14 +47,13 @@ Ela:
 No painel do Supabase, em **Project Settings > Edge Functions > Secrets**, configure:
 
 ```text
-MERCADO_PAGO_ACCESS_TOKEN=TEST-...
-MERCADO_PAGO_WEBHOOK_SECRET=...
-MERCADO_PAGO_ENVIRONMENT=test
-PREMIUM_THEMES_PRICE_BRL=19.90
-APP_URL=https://meus-convites.lovable.app
+MERCADOPAGO_PROD_ACCESS_TOKEN=APP_USR-...
+MERCADOPAGO_WEBHOOK_SECRET=...
+MERCADOPAGO_PROD_PUBLIC_KEY=APP_USR-...
+LOVABLE_API_KEY=...
 ```
 
-Use `MERCADO_PAGO_ENVIRONMENT=test` com credenciais de teste; a função seleciona `sandbox_init_point`. Use `live` ou remova a variável somente quando o teste completo for aprovado. O valor de `PREMIUM_THEMES_PRICE_BRL` deve ser um número positivo em reais, por exemplo `19.90`.
+O pacote está configurado com preço fixo de **R$ 59,90**. A função usa o Checkout Pro de produção, que apresenta os meios habilitados na conta Mercado Pago, incluindo Pix quando disponível. A chave Pix informada pode ser usada pela conta para receber pagamentos, mas o desbloqueio automático deve ocorrer pelo pagamento criado no Checkout Pro e confirmado pelo webhook; não libere acesso apenas por alguém copiar uma chave Pix.
 
 Não coloque essas chaves em `.env`, no frontend ou no GitHub.
 

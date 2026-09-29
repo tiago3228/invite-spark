@@ -499,7 +499,12 @@ function EventStep({
         {!premiumUnlocked && (
           <div className="mt-5 flex flex-col justify-between gap-4 rounded-2xl border border-[#e6d3bd] bg-[#fff9f1] p-5 sm:flex-row sm:items-center">
             <div>
-              <p className="font-medium text-[#5f4734]">Desbloqueie todos os temas premium</p>
+              <div className="flex items-center gap-3">
+                <p className="font-medium text-[#5f4734]">Desbloqueie todos os temas premium</p>
+                <span className="rounded-full bg-[#f1dfca] px-2.5 py-1 text-xs font-bold text-[#6f4935]">
+                  R$ 59,90
+                </span>
+              </div>
               <p className="mt-1 text-sm leading-6 text-[#856f5d]">
                 Pagamento único via Mercado Pago. Cartão ou Pix, sem assinatura recorrente.
               </p>

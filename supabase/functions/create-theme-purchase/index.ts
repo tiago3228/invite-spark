@@ -35,10 +35,11 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (existing) return json({ alreadyUnlocked: true, checkoutUrl: null });
 
-    const amount = Number(env("PREMIUM_THEMES_PRICE_BRL"));
-    if (!Number.isFinite(amount) || amount <= 0)
-      return json({ error: "PREMIUM_THEMES_PRICE_BRL inválido." }, 500);
-    const origin = request.headers.get("origin") || env("APP_URL");
+    const amount = 59.9;
+    const origin =
+      Deno.env.get("APP_URL") ||
+      request.headers.get("origin") ||
+      "https://meus-convites.lovable.app";
     const reference = `theme-pack:${user.id}:${crypto.randomUUID()}`;
     const { data: purchase, error: purchaseError } = await admin
       .from("theme_purchases")
