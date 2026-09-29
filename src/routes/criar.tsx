@@ -1186,6 +1186,18 @@ function MediaStep({ draft, update, userId, ensureDraftId }: EditorProps) {
                 </div>
               )}
             </div>
+            <div className="mt-5">
+              <Field
+                label="Ou cole o link público da música"
+                hint="Use um link direto para MP3, OGG ou WAV."
+              >
+                <Input
+                  value={draft.audioUrl}
+                  onChange={(value) => update("audioUrl", value)}
+                  placeholder="https://.../minha-musica.mp3"
+                />
+              </Field>
+            </div>
           </div>
         </div>
       </div>
