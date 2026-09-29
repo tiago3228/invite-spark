@@ -214,9 +214,10 @@ export function QuinzeInvite({
             <Link
               to="/convite/$slug/confirmar"
               params={{ slug: invitation.slug }}
+              search={{ status: "confirmed" }}
               className="quinze-btn"
             >
-              <Check size={18} /> Confirmar presença
+              <Check size={18} /> Confirmar presença e informar WhatsApp
             </Link>
           )}
           {location["mapsUrl"] && (
@@ -232,6 +233,16 @@ export function QuinzeInvite({
             >
               <X size={18} /> Não poderei comparecer
             </button>
+          )}
+          {!token && !whatsappUrl && (
+            <Link
+              to="/convite/$slug/confirmar"
+              params={{ slug: invitation.slug }}
+              search={{ status: "declined" }}
+              className="quinze-btn quinze-btn-outline"
+            >
+              <X size={18} /> Não poderei comparecer
+            </Link>
           )}
         </div>
 

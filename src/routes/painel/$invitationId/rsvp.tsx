@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Flower2, Loader2, Search, UserRound, Users, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Flower2,
+  Loader2,
+  MessageCircle,
+  Search,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listOwnRsvps, type Rsvp, type RsvpStatus } from "@/lib/rsvp";
 
@@ -158,6 +168,7 @@ function RsvpDashboard() {
                         {row.companions > 0
                           ? `${row.companions} acompanhante(s)`
                           : "Sem acompanhantes"}
+                        {row.whatsapp && ` · WhatsApp: ${row.whatsapp}`}
                         {row.note ? ` · ${row.note}` : ""}
                       </div>
                     </div>
@@ -170,6 +181,17 @@ function RsvpDashboard() {
                           ? "Não poderá ir"
                           : "Pendente"}
                     </span>
+                    {row.whatsapp && (
+                      <a
+                        href={`https://wa.me/55${row.whatsapp}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Conversar com ${row.guest_name} no WhatsApp`}
+                        className="self-start rounded-full border border-[#dce7dd] p-2 text-[#4d8060]"
+                      >
+                        <MessageCircle size={16} />
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

@@ -22,6 +22,7 @@ function ConfirmPresence() {
   const search = Route.useSearch();
   const [invitation, setInvitation] = useState<any>();
   const [guestName, setGuestName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [status, setStatus] = useState<RsvpStatus>(search.status ?? "confirmed");
   const [companions, setCompanions] = useState(0);
   const [note, setNote] = useState("");
@@ -37,7 +38,14 @@ function ConfirmPresence() {
     if (!invitation || !guestName.trim()) return;
     setState("loading");
     try {
-      await submitRsvp({ invitationId: invitation.id, guestName, status, companions, note });
+      await submitRsvp({
+        invitationId: invitation.id,
+        guestName,
+        whatsapp,
+        status,
+        companions,
+        note,
+      });
       setState("done");
     } catch (submitError) {
       setError(
@@ -109,6 +117,22 @@ function ConfirmPresence() {
               placeholder="Nome completo"
               className="w-full rounded-xl border border-[#dedbd3] px-4 py-3.5 outline-none focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
             />
+          </label>
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-[#4e4a43]">Seu WhatsApp</span>
+            <input
+              required
+              inputMode="tel"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              placeholder="31-99999-9999"
+              pattern="[0-9() +.-]{10,20}"
+              title="Informe um WhatsApp válido com DDD."
+              className="w-full rounded-xl border border-[#dedbd3] px-4 py-3.5 outline-none focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+            />
+            <span className="mt-1 block text-xs text-[#89857e]">
+              Usaremos apenas para contato sobre o evento.
+            </span>
           </label>
           <div>
             <span className="mb-2 block text-sm font-medium text-[#4e4a43]">

@@ -7,6 +7,7 @@ export type Rsvp = {
   id: string;
   invitation_id: string;
   guest_name: string;
+  whatsapp: string;
   status: RsvpStatus;
   companions: number;
   note: string | null;
@@ -28,6 +29,7 @@ export async function findPublishedInvitation(slug: string) {
 export async function submitRsvp(input: {
   invitationId: string;
   guestName: string;
+  whatsapp: string;
   status: RsvpStatus;
   companions: number;
   note: string;
@@ -35,6 +37,7 @@ export async function submitRsvp(input: {
   const { data, error } = await db.rpc("submit_guest_response", {
     _invitation_id: input.invitationId,
     _name: input.guestName.trim(),
+    _whatsapp: input.whatsapp.replace(/\D/g, ""),
     _status: input.status,
     _companions: input.companions,
   });
@@ -53,7 +56,7 @@ export async function listOwnRsvps(invitationId: string, userId: string): Promis
   if (!invitation) return [];
   const { data, error } = await db
     .from("guests")
-    .select("id, invitation_id, name, status, companions, created_at, responded_at")
+    .select("id, invitation_id, name, whatsapp, status, companions, created_at, responded_at")
     .eq("invitation_id", invitationId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -61,6 +64,7 @@ export async function listOwnRsvps(invitationId: string, userId: string): Promis
     id: guest.id,
     invitation_id: guest.invitation_id,
     guest_name: guest.name,
+    whatsapp: guest.whatsapp ?? "",
     status: guest.status,
     companions: guest.companions ?? 0,
     note: null,
