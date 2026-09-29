@@ -65,6 +65,16 @@ function RsvpDashboard() {
     [filter, rows, search],
   );
   const count = (status: RsvpStatus) => rows.filter((row) => row.status === status).length;
+  function whatsappUrl(row: Rsvp) {
+    const number = row.whatsapp.length <= 11 ? `55${row.whatsapp}` : row.whatsapp;
+    const names = row.member_names.length > 0 ? row.member_names.join(", ") : row.guest_name;
+    const total = row.member_names.length || row.companions + 1;
+    const message =
+      row.status === "confirmed"
+        ? `Olá, ${row.guest_name}! Confirmamos sua presença no nosso evento. Pessoas confirmadas: ${names}. Total: ${total}. Será uma alegria receber vocês!`
+        : `Olá, ${row.guest_name}! Recebemos sua resposta sobre o convite. Se precisar falar conosco, estamos à disposição.`;
+    return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+  }
   const cards: SummaryCard[] = [
     {
       label: "Confirmados",
@@ -188,13 +198,14 @@ function RsvpDashboard() {
                     </span>
                     {row.whatsapp && (
                       <a
-                        href={`https://wa.me/55${row.whatsapp}`}
+                        href={whatsappUrl(row)}
                         target="_blank"
                         rel="noreferrer"
-                        aria-label={`Conversar com ${row.guest_name} no WhatsApp`}
-                        className="self-start rounded-full border border-[#dce7dd] p-2 text-[#4d8060]"
+                        aria-label={`Enviar confirmação para ${row.guest_name} no WhatsApp`}
+                        className="inline-flex items-center gap-2 self-start rounded-full border border-[#dce7dd] px-3 py-2 text-xs font-medium text-[#4d8060]"
                       >
                         <MessageCircle size={16} />
+                        {row.status === "confirmed" ? "Enviar confirmação" : "Enviar mensagem"}
                       </a>
                     )}
                   </div>

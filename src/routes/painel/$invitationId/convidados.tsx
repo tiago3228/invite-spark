@@ -121,7 +121,9 @@ function GuestsPage() {
   function sendWhatsapp(g: Guest, reminder: boolean) {
     const text = reminder
       ? `Olá ${g.name}! Ainda não recebemos sua resposta para o convite de ${invitation?.title}. Pode confirmar por aqui? ${linkFor(g)}`
-      : `Olá ${g.name}! Você está convidado(a) para ${invitation?.title}. Abra seu convite: ${linkFor(g)}`;
+      : g.status === "confirmed"
+        ? `Olá, ${g.name}! Confirmamos sua presença em ${invitation?.title}. Serão ${g.companions + 1} pessoa(s) no total. Será uma alegria receber vocês!`
+        : `Olá ${g.name}! Você está convidado(a) para ${invitation?.title}. Abra seu convite: ${linkFor(g)}`;
     const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
     if (reminder)

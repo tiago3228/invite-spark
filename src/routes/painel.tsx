@@ -256,20 +256,18 @@ function Dashboard() {
                   >
                     Editar convite <ArrowRight size={14} />
                   </a>
-                  <Link
-                    to="/painel/$invitationId/rsvp"
-                    params={{ invitationId: invitation.id }}
+                  <a
+                    href={`/painel/${encodeURIComponent(invitation.id)}/rsvp`}
                     className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#777a74]"
                   >
                     Ver RSVP
-                  </Link>
-                  <Link
-                    to="/painel/$invitationId/convidados"
-                    params={{ invitationId: invitation.id }}
+                  </a>
+                  <a
+                    href={`/painel/${encodeURIComponent(invitation.id)}/convidados`}
                     className="inline-flex items-center gap-2 rounded-lg bg-[#2f5145] px-3 py-2 text-xs font-semibold text-white"
                   >
                     Convidados e links
-                  </Link>
+                  </a>
                   {invitation.slug && invitation.status === "published" && (
                     <a
                       href={`/convite/${encodeURIComponent(invitation.slug)}`}
