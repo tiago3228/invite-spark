@@ -41,6 +41,7 @@ type Guest = {
   token: string;
   status: "pending" | "confirmed" | "declined";
   companions: number;
+  party_limit: number;
 };
 
 function GuestsPage() {
@@ -50,6 +51,7 @@ function GuestsPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [partyLimit, setPartyLimit] = useState(1);
   const [filter, setFilter] = useState<"all" | Guest["status"]>("all");
   const [copied, setCopied] = useState("");
   const [importing, setImporting] = useState(false);
@@ -100,13 +102,20 @@ function GuestsPage() {
       invitation_id: invitationId,
       name: name.trim(),
       whatsapp: phone.replace(/\D/g, ""),
+      party_limit: Math.max(1, Math.min(20, partyLimit)),
     });
     setName("");
     setPhone("");
+    setPartyLimit(1);
     void load();
   }
   async function remove(id: string) {
     await db.from("guests").delete().eq("id", id);
+    void load();
+  }
+  async function updatePartyLimit(id: string, value: string) {
+    const next = Math.max(1, Math.min(20, Number(value) || 1));
+    await db.from("guests").update({ party_limit: next }).eq("id", id);
     void load();
   }
   function sendWhatsapp(g: Guest, reminder: boolean) {
@@ -295,7 +304,7 @@ function GuestsPage() {
           ))}
         </div>
 
-        <form onSubmit={addGuest} className="mt-6 flex flex-col gap-2 sm:flex-row">
+        <form onSubmit={addGuest} className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-end">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -308,6 +317,19 @@ function GuestsPage() {
             placeholder="WhatsApp com DDD"
             className="rounded-xl border border-input bg-card px-4 py-3 sm:w-56"
           />
+          <label className="text-xs text-muted-foreground">
+            <span className="mb-1 block">Limite de pessoas</span>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={partyLimit}
+              onChange={(e) =>
+                setPartyLimit(Math.max(1, Math.min(20, Number(e.target.value) || 1)))
+              }
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 sm:w-36"
+            />
+          </label>
           <button className="rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground">
             Adicionar
           </button>
@@ -331,6 +353,18 @@ function GuestsPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
+                <label className="flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground">
+                  Limite
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    defaultValue={g.party_limit ?? 1}
+                    onBlur={(event) => void updatePartyLimit(g.id, event.target.value)}
+                    className="w-10 bg-transparent text-center text-foreground outline-none"
+                    aria-label={`Limite de pessoas para ${g.name}`}
+                  />
+                </label>
                 <button
                   onClick={() => copy(g)}
                   className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"

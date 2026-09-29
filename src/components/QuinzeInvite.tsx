@@ -16,7 +16,14 @@ import { supabase } from "@/integrations/supabase/client";
 import introVideo from "@/assets/quinze-intro.mp4.asset.json";
 
 const db = supabase as any;
-type Guest = { name: string; status: string; companions: number } | null;
+type Guest = {
+  id: string;
+  name: string;
+  whatsapp: string;
+  status: string;
+  companions: number;
+  party_limit: number;
+} | null;
 
 export function QuinzeInvite({
   invitation,
@@ -42,7 +49,7 @@ export function QuinzeInvite({
   const [stage, setStage] = useState<"intro" | "card">("intro");
   const [muted, setMuted] = useState(true);
   const [guest, setGuest] = useState<Guest>(null);
-  const [companions, setCompanions] = useState(0);
+  const [memberNames, setMemberNames] = useState<string[]>([]);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -54,7 +61,7 @@ export function QuinzeInvite({
       const g = data?.[0];
       if (g) {
         setGuest(g);
-        setCompanions(g.companions ?? 0);
+        setMemberNames([g.name]);
       }
     });
   }, [token]);
@@ -64,11 +71,17 @@ export function QuinzeInvite({
 
   async function respond(status: "confirmed" | "declined") {
     if (!token) return;
+    if (status === "confirmed" && memberNames.filter((value) => value.trim()).length === 0) {
+      setMsg("Informe pelo menos um nome para confirmar a presença.");
+      return;
+    }
     setBusy(true);
     const { data, error } = await db.rpc("respond_guest", {
       _token: token,
       _status: status,
-      _companions: status === "confirmed" ? companions : 0,
+      _companions: status === "confirmed" ? Math.max(0, memberNames.length - 1) : 0,
+      _member_names: status === "confirmed" ? memberNames : [],
+      _whatsapp: guest?.whatsapp ?? "",
     });
     setBusy(false);
     setAsking(false);
@@ -176,18 +189,37 @@ export function QuinzeInvite({
 
         {asking && (
           <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm">
-            <label className="block font-medium">Quantos acompanhantes virão com você?</label>
-            <select
-              value={companions}
-              onChange={(e) => setCompanions(Number(e.target.value))}
-              className="mt-2 w-full rounded-xl border border-[var(--q-deep)]/30 bg-transparent px-3 py-2"
-            >
-              {[0, 1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n === 0 ? "Só eu" : `${n} acompanhante(s)`}
-                </option>
+            <label className="block font-medium">Informe os nomes de quem vai comparecer</label>
+            <p className="mt-1 text-xs opacity-70">
+              Este convite permite até {guest?.party_limit ?? 1} pessoa(s).
+            </p>
+            <div className="mt-2 space-y-2">
+              {memberNames.map((memberName, index) => (
+                <input
+                  key={index}
+                  required
+                  value={memberName}
+                  onChange={(event) =>
+                    setMemberNames((current) =>
+                      current.map((value, currentIndex) =>
+                        currentIndex === index ? event.target.value : value,
+                      ),
+                    )
+                  }
+                  placeholder={index === 0 ? "Seu nome completo" : `Nome da pessoa ${index + 1}`}
+                  className="w-full rounded-xl border border-[var(--q-deep)]/30 bg-transparent px-3 py-2"
+                />
               ))}
-            </select>
+            </div>
+            {(guest?.party_limit ?? 1) > memberNames.length && (
+              <button
+                type="button"
+                onClick={() => setMemberNames((current) => [...current, ""])}
+                className="mt-2 text-sm font-semibold underline"
+              >
+                + Adicionar outra pessoa
+              </button>
+            )}
             <button
               disabled={busy}
               onClick={() => respond("confirmed")}

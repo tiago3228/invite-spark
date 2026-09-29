@@ -171,6 +171,11 @@ function RsvpDashboard() {
                         {row.whatsapp && ` · WhatsApp: ${row.whatsapp}`}
                         {row.note ? ` · ${row.note}` : ""}
                       </div>
+                      {row.member_names.length > 0 && (
+                        <div className="mt-2 text-xs text-[#5d7a67]">
+                          Pessoas: {row.member_names.join(", ")}
+                        </div>
+                      )}
                     </div>
                     <span
                       className={`self-start rounded-full px-3 py-1 text-xs font-medium ${row.status === "confirmed" ? "bg-[#e4f0e5] text-[#4d8060]" : row.status === "declined" ? "bg-[#f8e5df] text-[#9b4e3c]" : "bg-[#fff3dc] text-[#8a6a3e]"}`}
