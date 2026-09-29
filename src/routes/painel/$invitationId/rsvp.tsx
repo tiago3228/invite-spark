@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Bell,
   Check,
   Flower2,
   Loader2,
@@ -28,6 +29,8 @@ function RsvpDashboard() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notification, setNotification] = useState("");
+  const previousConfirmedIds = useRef<Set<string> | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
@@ -37,6 +40,20 @@ function RsvpDashboard() {
     }
     try {
       const result = await listOwnRsvps(invitationId, data.session.user.id);
+      const confirmedIds = new Set(
+        result.filter((row) => row.status === "confirmed").map((row) => row.id),
+      );
+      const previousIds = previousConfirmedIds.current;
+      if (previousIds) {
+        const newConfirmation = result.find(
+          (row) => row.status === "confirmed" && !previousIds.has(row.id),
+        );
+        if (newConfirmation) {
+          setNotification(`Nova confirmação recebida de ${newConfirmation.guest_name}.`);
+          window.setTimeout(() => setNotification(""), 6000);
+        }
+      }
+      previousConfirmedIds.current = confirmedIds;
       setRows(result);
       setError("");
     } catch (loadError) {
@@ -134,6 +151,22 @@ function RsvpDashboard() {
         <p className="mt-2 text-[#77736b]">
           As respostas são privadas e visíveis apenas para você.
         </p>
+        {notification && (
+          <div className="mt-5 flex items-center gap-3 rounded-2xl border border-[#cfe0d2] bg-[#eaf2eb] px-4 py-3 text-sm text-[#3f6b4e] shadow-[0_8px_20px_rgba(47,81,69,0.06)]">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#4d8060]">
+              <Bell size={16} />
+            </span>
+            <span className="flex-1 font-medium">{notification}</span>
+            <button
+              type="button"
+              onClick={() => setNotification("")}
+              className="rounded-full p-1 text-[#5d7a67] hover:bg-white"
+              aria-label="Fechar notificação"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {cards.map(({ label, value, Icon, color }) => (
             <div key={label} className="rounded-2xl border border-[#e6e0d7] bg-white p-5">

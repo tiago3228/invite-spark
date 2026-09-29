@@ -118,6 +118,11 @@ function GuestsPage() {
 
   const linkFor = (g: Guest) =>
     `${window.location.origin}/convite/${invitation?.slug}?g=${g.token}`;
+  const whatsappUrl = (phoneNumber: string, text: string) => {
+    const digits = phoneNumber.replace(/\D/g, "");
+    const number = digits.startsWith("55") && digits.length >= 12 ? digits : `55${digits}`;
+    return `https://wa.me/${number}?${new URLSearchParams({ text }).toString()}`;
+  };
 
   async function addGuest(e: React.FormEvent) {
     e.preventDefault();
@@ -169,8 +174,7 @@ function GuestsPage() {
       : g.status === "confirmed"
         ? `Olá, ${g.name}! Confirmamos sua presença em ${invitation?.title}. Serão ${g.companions + 1} pessoa(s) no total. Será uma alegria receber vocês!`
         : customMessage;
-    const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(whatsappUrl(g.whatsapp, text), "_blank", "noopener,noreferrer");
     if (reminder)
       void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
   }
@@ -180,8 +184,7 @@ function GuestsPage() {
       : "em breve";
     const time = invitation?.event_time ? ` às ${String(invitation.event_time).slice(0, 5)}` : "";
     const text = `Olá, ${g.name}! Lembrete: o evento será em ${date}${time}. Confirmamos ${g.companions + 1} pessoa(s) da sua família. Esperamos vocês!`;
-    const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(whatsappUrl(g.whatsapp, text), "_blank", "noopener,noreferrer");
     void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
   }
   function copy(g: Guest) {
