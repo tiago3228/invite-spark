@@ -20,6 +20,8 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 
 const db = supabase as any;
+const DEFAULT_GUEST_INVITE_MESSAGE =
+  "Olá, [NOME]! Você está convidado(a) para [EVENTO]. Abra seu convite: [LINK]";
 
 export const Route = createFileRoute("/painel/$invitationId/convidados")({
   component: GuestsPage,
@@ -53,6 +55,8 @@ function GuestsPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [partyLimit, setPartyLimit] = useState(1);
+  const [inviteMessage, setInviteMessage] = useState(DEFAULT_GUEST_INVITE_MESSAGE);
+  const [messageSaved, setMessageSaved] = useState(false);
   const [filter, setFilter] = useState<"all" | Guest["status"]>("all");
   const [copied, setCopied] = useState("");
   const [importing, setImporting] = useState(false);
@@ -63,12 +67,13 @@ function GuestsPage() {
     const [{ data: inv }, { data: g }] = await Promise.all([
       db
         .from("invitations")
-        .select("id,title,slug,status,event_date,event_time")
+        .select("id,title,slug,status,event_date,event_time,rsvp_config")
         .eq("id", invitationId)
         .maybeSingle(),
       db.from("guests").select("*").eq("invitation_id", invitationId).order("created_at"),
     ]);
     setInvitation(inv);
+    setInviteMessage(inv?.rsvp_config?.guestInviteMessage || DEFAULT_GUEST_INVITE_MESSAGE);
     setGuests(g ?? []);
     setLoading(false);
   }, [invitationId]);
@@ -123,12 +128,33 @@ function GuestsPage() {
     await db.from("guests").update({ party_limit: next }).eq("id", id);
     void load();
   }
+  async function saveInviteMessage() {
+    if (!invitation) return;
+    const rsvpConfig = {
+      ...(invitation.rsvp_config ?? {}),
+      guestInviteMessage: inviteMessage.trim() || DEFAULT_GUEST_INVITE_MESSAGE,
+    };
+    const { error } = await db
+      .from("invitations")
+      .update({ rsvp_config: rsvpConfig })
+      .eq("id", invitationId);
+    if (!error) {
+      setInvitation((current: any) => ({ ...current, rsvp_config: rsvpConfig }));
+      setMessageSaved(true);
+      window.setTimeout(() => setMessageSaved(false), 1800);
+    }
+  }
   function sendWhatsapp(g: Guest, reminder: boolean) {
+    const customMessage = inviteMessage
+      .replaceAll("[NOME]", g.name)
+      .replaceAll("[EVENTO]", invitation?.title || "nosso evento")
+      .replaceAll("[LINK]", linkFor(g))
+      .replaceAll("[LIMITE]", String(g.party_limit ?? 1));
     const text = reminder
       ? `Olá ${g.name}! Ainda não recebemos sua resposta para o convite de ${invitation?.title}. Pode confirmar por aqui? ${linkFor(g)}`
       : g.status === "confirmed"
         ? `Olá, ${g.name}! Confirmamos sua presença em ${invitation?.title}. Serão ${g.companions + 1} pessoa(s) no total. Será uma alegria receber vocês!`
-        : `Olá ${g.name}! Você está convidado(a) para ${invitation?.title}. Abra seu convite: ${linkFor(g)}`;
+        : customMessage;
     const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
     if (reminder)
@@ -322,6 +348,34 @@ function GuestsPage() {
           </p>
         )}
 
+        <section className="mt-8 rounded-3xl border border-[#e6e0d7] bg-white p-5 shadow-[0_10px_30px_rgba(47,81,69,0.04)] sm:p-6">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            <div>
+              <p className="font-serif text-2xl text-[#2f5145]">Mensagem do convite</p>
+              <p className="mt-1 text-sm text-[#89857e]">
+                Personalize o texto que será aberto no WhatsApp com o link de cada convidado.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void saveInviteMessage()}
+              className="rounded-full bg-[#2f5145] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#244238]"
+            >
+              {messageSaved ? "Mensagem salva" : "Salvar mensagem"}
+            </button>
+          </div>
+          <textarea
+            value={inviteMessage}
+            onChange={(event) => setInviteMessage(event.target.value)}
+            rows={4}
+            className="mt-5 w-full rounded-2xl border border-[#dedbd3] bg-[#fffefa] px-4 py-3 text-sm leading-6 text-[#4e4a43] outline-none focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+          />
+          <p className="mt-2 text-xs leading-5 text-[#89857e]">
+            Use <strong>[NOME]</strong>, <strong>[EVENTO]</strong>, <strong>[LINK]</strong> e{" "}
+            <strong>[LIMITE]</strong> para preencher automaticamente.
+          </p>
+        </section>
+
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { k: "confirmed", label: "Confirmados", v: counts.confirmed, I: Check },
@@ -409,6 +463,22 @@ function GuestsPage() {
                       ? "Não poderá comparecer"
                       : "Ainda não respondeu"}
                   {g.whatsapp && ` · ${g.whatsapp}`}
+                </div>
+                <div className="mt-3 max-w-xs">
+                  <div className="flex items-center justify-between text-xs font-medium text-[#5d7a67]">
+                    <span>Membros cadastrados</span>
+                    <span>
+                      {g.status === "confirmed" ? g.companions + 1 : 0} de {g.party_limit ?? 1}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#eaf2eb]">
+                    <div
+                      className="h-full rounded-full bg-[#6b927c] transition-all"
+                      style={{
+                        width: `${Math.min(100, ((g.status === "confirmed" ? g.companions + 1 : 0) / (g.party_limit || 1)) * 100)}%`,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
