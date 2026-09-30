@@ -21,7 +21,7 @@ import * as XLSX from "xlsx";
 
 const db = supabase as any;
 const DEFAULT_GUEST_INVITE_MESSAGE =
-  "Olá, [NOME]! Você está convidado(a) para [EVENTO]. Abra seu convite: [LINK]";
+  "Olá, [NOME]! Você está convidado(a) para o [EVENTO]. Abra seu convite: [LINK]";
 
 export const Route = createFileRoute("/painel/$invitationId/convidados")({
   component: GuestsPage,
@@ -56,12 +56,15 @@ function GuestsPage() {
   const [phone, setPhone] = useState("");
   const [partyLimit, setPartyLimit] = useState(1);
   const [inviteMessage, setInviteMessage] = useState(DEFAULT_GUEST_INVITE_MESSAGE);
+  const [inviteEvent, setInviteEvent] = useState("");
   const [messageSaved, setMessageSaved] = useState(false);
   const [filter, setFilter] = useState<"all" | Guest["status"]>("all");
   const [copied, setCopied] = useState("");
   const [importing, setImporting] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageDirtyRef = useRef(false);
+  const eventDirtyRef = useRef(false);
 
   const load = useCallback(async () => {
     const [{ data: inv }, { data: g }] = await Promise.all([
@@ -73,7 +76,10 @@ function GuestsPage() {
       db.from("guests").select("*").eq("invitation_id", invitationId).order("created_at"),
     ]);
     setInvitation(inv);
-    setInviteMessage(inv?.rsvp_config?.guestInviteMessage || DEFAULT_GUEST_INVITE_MESSAGE);
+    if (!messageDirtyRef.current)
+      setInviteMessage(inv?.rsvp_config?.guestInviteMessage || DEFAULT_GUEST_INVITE_MESSAGE);
+    if (!eventDirtyRef.current)
+      setInviteEvent(inv?.rsvp_config?.guestInviteEvent || inv?.title || "");
     setGuests(g ?? []);
     setLoading(false);
   }, [invitationId]);
@@ -152,6 +158,7 @@ function GuestsPage() {
     const rsvpConfig = {
       ...(invitation.rsvp_config ?? {}),
       guestInviteMessage: inviteMessage.trim() || DEFAULT_GUEST_INVITE_MESSAGE,
+      guestInviteEvent: inviteEvent.trim() || invitation.title || "nosso evento",
     };
     const { error } = await db
       .from("invitations")
@@ -159,6 +166,8 @@ function GuestsPage() {
       .eq("id", invitationId);
     if (!error) {
       setInvitation((current: any) => ({ ...current, rsvp_config: rsvpConfig }));
+      messageDirtyRef.current = false;
+      eventDirtyRef.current = false;
       setMessageSaved(true);
       window.setTimeout(() => setMessageSaved(false), 1800);
     }
@@ -166,7 +175,7 @@ function GuestsPage() {
   function sendWhatsapp(g: Guest, reminder: boolean) {
     const customMessage = inviteMessage
       .replaceAll("[NOME]", g.name)
-      .replaceAll("[EVENTO]", invitation?.title || "nosso evento")
+      .replaceAll("[EVENTO]", inviteEvent.trim() || invitation?.title || "nosso evento")
       .replaceAll("[LINK]", linkFor(g))
       .replaceAll("[LIMITE]", String(g.party_limit ?? 1));
     const text = reminder
@@ -381,15 +390,32 @@ function GuestsPage() {
               {messageSaved ? "Mensagem salva" : "Salvar mensagem"}
             </button>
           </div>
+          <label className="mt-5 block text-xs font-semibold text-[#4e4a43]">
+            Evento que aparecerá na frase
+            <input
+              value={inviteEvent}
+              onChange={(event) => {
+                eventDirtyRef.current = true;
+                setInviteEvent(event.target.value);
+              }}
+              placeholder={invitation?.title || "Ex.: aniversário da Cecília"}
+              className="mt-1.5 w-full rounded-xl border border-[#dedbd3] bg-[#fffefa] px-4 py-3 text-sm font-normal text-[#4e4a43] outline-none focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
+            />
+          </label>
           <textarea
             value={inviteMessage}
-            onChange={(event) => setInviteMessage(event.target.value)}
+            onChange={(event) => {
+              messageDirtyRef.current = true;
+              setInviteMessage(event.target.value);
+            }}
             rows={4}
             className="mt-5 w-full rounded-2xl border border-[#dedbd3] bg-[#fffefa] px-4 py-3 text-sm leading-6 text-[#4e4a43] outline-none focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
           />
           <p className="mt-2 text-xs leading-5 text-[#89857e]">
-            Use <strong>[NOME]</strong>, <strong>[EVENTO]</strong>, <strong>[LINK]</strong> e{" "}
-            <strong>[LIMITE]</strong> para preencher automaticamente.
+            <strong>[NOME]</strong> será preenchido automaticamente com o nome de cada convidado. O{" "}
+            <strong>[EVENTO]</strong> usa o campo acima, e <strong>[LINK]</strong> recebe o link
+            individual gerado para cada convidado. Você também pode usar <strong>[LIMITE]</strong>{" "}
+            para mostrar o limite da família.
           </p>
         </section>
 
