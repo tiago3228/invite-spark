@@ -53,14 +53,17 @@ export function QuinzeInvite({
   const videoRef = useRef<HTMLVideoElement>(null);
 
   function startIntro() {
+    if (introStarted) return;
     setIntroStarted(true);
     void audioRef.current?.play().catch(() => undefined);
     window.requestAnimationFrame(() => void videoRef.current?.play().catch(() => undefined));
   }
 
-  function skipIntro() {
-    setStage("card");
-  }
+  useEffect(() => {
+    if (stage !== "intro" || introStarted) return;
+    const timer = window.setTimeout(startIntro, 0);
+    return () => window.clearTimeout(timer);
+  }, [introStarted, stage]);
 
   useEffect(() => {
     if (stage === "card") void audioRef.current?.play().catch(() => undefined);
@@ -109,7 +112,16 @@ export function QuinzeInvite({
     return (
       <>
         {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
-        <div className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]">
+        <div
+          className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]"
+          onClick={startIntro}
+          role="button"
+          tabIndex={0}
+          aria-label="Iniciar abertura do convite com música"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") startIntro();
+          }}
+        >
           <video
             ref={videoRef}
             src={videoUrl}
@@ -127,21 +139,6 @@ export function QuinzeInvite({
               {content["age"] || "15"} anos
             </p>
           </div>
-          {!introStarted ? (
-            <button
-              onClick={startIntro}
-              className="absolute bottom-10 rounded-full bg-[var(--q-deep)] px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
-            >
-              Iniciar abertura com música
-            </button>
-          ) : (
-            <button
-              onClick={skipIntro}
-              className="absolute bottom-10 rounded-full bg-[var(--q-deep)]/85 px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
-            >
-              Ir direto ao convite
-            </button>
-          )}
         </div>
       </>
     );
@@ -197,7 +194,7 @@ export function QuinzeInvite({
             <button
               disabled={busy}
               onClick={() => respond("declined")}
-              className="w-full max-w-md rounded-full bg-[#8e145b] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#76104e] focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
+              className="w-full max-w-sm rounded-full bg-[#8e145b] px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-[#76104e] focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-sm"
             >
               Não poderei comparecer
             </button>
@@ -206,7 +203,7 @@ export function QuinzeInvite({
               to="/convite/$slug/confirmar"
               params={{ slug: invitation.slug }}
               search={{ status: "declined" }}
-              className="flex w-full max-w-md items-center justify-center rounded-full bg-[#8e145b] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#76104e] focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
+              className="flex w-full max-w-sm items-center justify-center rounded-full bg-[#8e145b] px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-[#76104e] focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-sm"
             >
               Não poderei comparecer
             </Link>
