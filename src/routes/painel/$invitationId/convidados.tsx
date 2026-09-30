@@ -54,7 +54,7 @@ function GuestsPage() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [partyLimit, setPartyLimit] = useState(1);
+  const [partyLimit, setPartyLimit] = useState<number | "">(1);
   const [inviteMessage, setInviteMessage] = useState(DEFAULT_GUEST_INVITE_MESSAGE);
   const [inviteEvent, setInviteEvent] = useState("");
   const [messageSaved, setMessageSaved] = useState(false);
@@ -137,7 +137,7 @@ function GuestsPage() {
       invitation_id: invitationId,
       name: name.trim(),
       whatsapp: phone.replace(/\D/g, ""),
-      party_limit: Math.max(1, Math.min(20, partyLimit)),
+      party_limit: Math.max(1, Math.min(20, Number(partyLimit) || 1)),
     });
     setName("");
     setPhone("");
@@ -471,16 +471,41 @@ function GuestsPage() {
             </label>
             <label className="text-xs font-medium text-[#4e4a43]">
               Limite familiar
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={partyLimit}
-                onChange={(e) =>
-                  setPartyLimit(Math.max(1, Math.min(20, Number(e.target.value) || 1)))
-                }
-                className="mt-1.5 w-full rounded-xl border border-[#dedbd3] bg-[#fffefa] px-4 py-3 text-sm outline-none focus:border-[#6b927c] focus:ring-4 focus:ring-[#dce9df]"
-              />
+              <div className="mt-1.5 flex items-center rounded-xl border border-[#dedbd3] bg-[#fffefa] focus-within:border-[#6b927c] focus-within:ring-4 focus-within:ring-[#dce9df]">
+                <button
+                  type="button"
+                  aria-label="Diminuir limite familiar"
+                  onClick={() =>
+                    setPartyLimit((current) => Math.max(1, (Number(current) || 1) - 1))
+                  }
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-l-xl text-xl font-semibold text-[#2f5145] hover:bg-[#eaf2eb]"
+                >
+                  −
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  aria-label="Quantidade máxima de pessoas da família"
+                  value={partyLimit}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "").slice(0, 2);
+                    setPartyLimit(value === "" ? "" : Number(value));
+                  }}
+                  className="h-11 min-w-0 flex-1 bg-transparent px-2 text-center text-sm outline-none"
+                />
+                <button
+                  type="button"
+                  aria-label="Aumentar limite familiar"
+                  onClick={() =>
+                    setPartyLimit((current) => Math.min(20, (Number(current) || 0) + 1))
+                  }
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-r-xl text-xl font-semibold text-[#2f5145] hover:bg-[#eaf2eb]"
+                >
+                  +
+                </button>
+              </div>
+              <span className="mt-1 block text-[11px] text-[#89857e]">De 1 a 20 pessoas</span>
             </label>
             <button className="rounded-xl bg-[#2f5145] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#244238]">
               <Plus className="mr-1 inline" size={16} /> Adicionar
