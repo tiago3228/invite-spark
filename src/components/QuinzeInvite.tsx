@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, Check, Clock, Heart, MapPin, MessageCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,18 +52,18 @@ export function QuinzeInvite({
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  function startIntro() {
+  const startIntro = useCallback(() => {
     if (introStarted) return;
     setIntroStarted(true);
     void audioRef.current?.play().catch(() => undefined);
     window.requestAnimationFrame(() => void videoRef.current?.play().catch(() => undefined));
-  }
+  }, [introStarted]);
 
   useEffect(() => {
     if (stage !== "intro" || introStarted) return;
     const timer = window.setTimeout(startIntro, 0);
     return () => window.clearTimeout(timer);
-  }, [introStarted, stage]);
+  }, [introStarted, stage, startIntro]);
 
   useEffect(() => {
     if (stage === "card") void audioRef.current?.play().catch(() => undefined);
