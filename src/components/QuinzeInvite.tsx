@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { CalendarDays, Check, Clock, Heart, MapPin, MessageCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import introVideo from "@/assets/quinze-intro.mp4.asset.json";
+import ceciliaFinalArt from "@/assets/cecilia-final.jpeg";
 
 const db = supabase as any;
 const CECILIA_UPLOADED_AUDIO_URL =
@@ -145,83 +146,83 @@ export function QuinzeInvite({
       </>
     );
 
-  const answered = guest && guest.status !== "pending";
-
   return (
     <>
       {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
-      <main className="quinze-theme quinze-water min-h-screen px-4 py-8">
-        <div className="quinze-card quinze-rise mx-auto max-w-md rounded-[28px] px-6 py-10 text-center text-[var(--q-deep)] shadow-2xl">
-          {guest && (
-            <p className="text-xs uppercase tracking-[0.3em] opacity-70">Querido(a) {guest.name}</p>
-          )}
-          <h1 className="quinze-script mt-2 text-7xl leading-tight">{name}</h1>
-          <Heart className="mx-auto mt-1" size={18} />
-          <div className="mt-2 font-serif text-6xl">{content["age"] || "15"}</div>
-          <div className="quinze-script -mt-2 text-4xl">anos</div>
-          <p className="mx-auto mt-5 max-w-xs text-base leading-6">
-            {content["phrase"] || "Será uma alegria enorme compartilhar esse momento com você!"}
-          </p>
-
-          <div className="mt-7 grid grid-cols-2 gap-4 border-y border-[var(--q-deep)]/20 py-5 text-left text-sm">
-            <div className="flex gap-2">
-              <CalendarDays size={22} className="shrink-0" />
-              <div>
-                <div className="font-serif text-2xl leading-none">
-                  {date ? date.getDate().toString().padStart(2, "0") : "--"}
-                </div>
-                <div className="uppercase">
-                  {date?.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-                </div>
-                <div className="text-xs uppercase tracking-widest opacity-70">
-                  {date?.toLocaleDateString("pt-BR", { weekday: "long" })}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Clock size={22} className="shrink-0" />
-              <div>
-                <div className="font-serif text-2xl leading-none">{time || "--"}</div>
-                <div className="text-xs uppercase tracking-widest opacity-70">horas</div>
-              </div>
-            </div>
-            {location["venueName"] && (
-              <div className="col-span-2 flex gap-2">
-                <MapPin size={22} className="shrink-0" />
-                <div>
-                  <div className="font-semibold uppercase">{location["venueName"]}</div>
-                  <div className="opacity-80">{location["address"]}</div>
-                </div>
+      <main className="min-h-screen bg-[#f7c4dc]">
+        <div className="relative mx-auto w-full max-w-[1024px]">
+          <img
+            src={ceciliaFinalArt}
+            alt="Convite de 15 anos da Cecília"
+            className="block h-auto w-full"
+          />
+          <div className="absolute inset-0">
+            {whatsappUrl ? (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Presença confirmada pelo WhatsApp"
+                className="absolute left-[15%] top-[75%] h-[7.2%] w-[36%] rounded-[18px] focus:outline-none focus:ring-4 focus:ring-white/80"
+              />
+            ) : token && guest ? (
+              <button
+                disabled={busy}
+                onClick={() => setAsking(true)}
+                aria-label="Presença confirmada"
+                className="absolute left-[15%] top-[75%] h-[7.2%] w-[36%] rounded-[18px] focus:outline-none focus:ring-4 focus:ring-white/80"
+              />
+            ) : (
+              <Link
+                to="/convite/$slug/confirmar"
+                params={{ slug: invitation.slug }}
+                search={{ status: "confirmed" }}
+                aria-label="Presença confirmada"
+                className="absolute left-[15%] top-[75%] h-[7.2%] w-[36%] rounded-[18px] focus:outline-none focus:ring-4 focus:ring-white/80"
+              />
+            )}
+            {location["mapsUrl"] && (
+              <a
+                href={location["mapsUrl"]}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Ver mapa do local"
+                className="absolute left-[52.8%] top-[75%] h-[7.2%] w-[33%] rounded-[18px] focus:outline-none focus:ring-4 focus:ring-white/80"
+              />
+            )}
+            {token && guest ? (
+              <button
+                disabled={busy}
+                onClick={() => respond("declined")}
+                className="absolute left-[15%] top-[84%] h-[5.5%] w-[70%] rounded-full bg-[#8e145b]/90 px-4 text-sm font-semibold text-white shadow-lg focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
+              >
+                Não poderei comparecer
+              </button>
+            ) : (
+              <Link
+                to="/convite/$slug/confirmar"
+                params={{ slug: invitation.slug }}
+                search={{ status: "declined" }}
+                className="absolute left-[15%] top-[84%] flex h-[5.5%] w-[70%] items-center justify-center rounded-full bg-[#8e145b]/90 px-4 text-sm font-semibold text-white shadow-lg focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
+              >
+                Não poderei comparecer
+              </Link>
+            )}
+            {msg && (
+              <div className="absolute left-[8%] top-[91%] w-[84%] rounded-2xl bg-white/95 p-3 text-center text-sm font-semibold text-[#76104e] shadow-lg">
+                {msg}
               </div>
             )}
           </div>
-
-          {content["dressCode"] && (
-            <div className="mt-5 rounded-2xl bg-[var(--q-paper)] p-4 text-left">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">
-                Tipo de traje
-              </p>
-              <p className="mt-2 font-serif text-xl">{content["dressCode"]}</p>
-            </div>
-          )}
-
-          {content["note"] && (
-            <p className="mt-5 text-xs font-medium uppercase tracking-[0.2em]">{content["note"]}</p>
-          )}
-
-          {msg && (
-            <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm font-medium">
-              {msg}
-            </div>
-          )}
-
-          {asking && (
-            <div className="mt-6 rounded-2xl bg-[var(--q-paper)] p-4 text-sm">
-              <label className="block font-medium">Informe os nomes de quem vai comparecer</label>
+        </div>
+        {asking && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-3xl bg-[#fff0f7] p-5 text-[#76104e] shadow-2xl">
+              <label className="block font-semibold">Informe os nomes de quem vai comparecer</label>
               <p className="mt-1 text-xs opacity-70">
                 Este convite permite até {guest?.party_limit ?? 1} pessoa(s).
               </p>
-              <div className="mt-2 space-y-2">
+              <div className="mt-3 space-y-2">
                 {memberNames.map((memberName, index) => (
                   <input
                     key={index}
@@ -235,7 +236,7 @@ export function QuinzeInvite({
                       )
                     }
                     placeholder={index === 0 ? "Seu nome completo" : `Nome da pessoa ${index + 1}`}
-                    className="w-full rounded-xl border border-[var(--q-deep)]/30 bg-transparent px-3 py-2"
+                    className="w-full rounded-xl border border-[#8e145b]/30 bg-white px-3 py-2"
                   />
                 ))}
               </div>
@@ -251,65 +252,20 @@ export function QuinzeInvite({
               <button
                 disabled={busy}
                 onClick={() => respond("confirmed")}
-                className="mt-3 w-full rounded-xl bg-[var(--q-deep)] py-3 font-semibold text-[var(--q-paper)]"
+                className="mt-4 w-full rounded-xl bg-[#8e145b] py-3 font-semibold text-white"
               >
-                {busy ? "Enviando..." : "Confirmar"}
+                {busy ? "Enviando..." : "Confirmar presença"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAsking(false)}
+                className="mt-2 w-full py-2 text-sm underline"
+              >
+                Cancelar
               </button>
             </div>
-          )}
-
-          <div className="mt-6 grid gap-3">
-            {whatsappUrl ? (
-              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="quinze-btn">
-                <MessageCircle size={18} /> Confirmar pelo WhatsApp
-              </a>
-            ) : token && guest ? (
-              <button disabled={busy} onClick={() => setAsking(true)} className="quinze-btn">
-                <Check size={18} />
-                {answered && guest.status === "confirmed"
-                  ? "Presença confirmada"
-                  : "Confirmar presença"}
-              </button>
-            ) : (
-              <Link
-                to="/convite/$slug/confirmar"
-                params={{ slug: invitation.slug }}
-                search={{ status: "confirmed" }}
-                className="quinze-btn"
-              >
-                <Check size={18} /> Confirmar presença e informar WhatsApp
-              </Link>
-            )}
-            {location["mapsUrl"] && (
-              <a href={location["mapsUrl"]} target="_blank" rel="noreferrer" className="quinze-btn">
-                <MapPin size={18} /> Ver mapa do local
-              </a>
-            )}
-            {token && guest && (
-              <button
-                disabled={busy}
-                onClick={() => respond("declined")}
-                className="quinze-btn quinze-btn-outline"
-              >
-                <X size={18} /> Não poderei comparecer
-              </button>
-            )}
-            {!token && !whatsappUrl && (
-              <Link
-                to="/convite/$slug/confirmar"
-                params={{ slug: invitation.slug }}
-                search={{ status: "declined" }}
-                className="quinze-btn quinze-btn-outline"
-              >
-                <X size={18} /> Não poderei comparecer
-              </Link>
-            )}
           </div>
-
-          <p className="quinze-script mt-8 text-3xl leading-tight">
-            {content["closing"] || "Sua presença torna esta festa ainda mais especial!"}
-          </p>
-        </div>
+        )}
       </main>
     </>
   );
