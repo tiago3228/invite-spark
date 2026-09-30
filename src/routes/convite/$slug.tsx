@@ -21,17 +21,36 @@ export const Route = createFileRoute("/convite/$slug")({
   validateSearch: (s: Record<string, unknown>): { g?: string | undefined } => ({
     g: typeof s["g"] === "string" ? (s["g"] as string) : undefined,
   }),
-  head: () => ({
-    meta: [
-      { title: "Você está convidado | Meu Convite" },
-      { name: "description", content: "Abra seu convite e confirme sua presença." },
-      { property: "og:title", content: "Você está convidado" },
-      { property: "og:description", content: "Abra seu convite e confirme sua presença." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: ({ params }) => {
+    const isCecilia = params.slug === "cecilia-15-anos";
+    const title = isCecilia
+      ? "Cecília faz 15 anos | Meu Convite"
+      : "Você está convidado | Meu Convite";
+    const description = isCecilia
+      ? "Você está convidado para comemorar os 15 anos da Cecília. Abra o convite virtual para ver todos os detalhes."
+      : "Abra seu convite virtual e confirme sua presença.";
+    const image = isCecilia
+      ? "https://meus-convites.lovable.app/convites/cecilia-15-anos.jpeg"
+      : "https://meus-convites.lovable.app/icon-512.svg";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { property: "og:image", content: image },
+        { property: "og:image:width", content: isCecilia ? "1024" : "512" },
+        { property: "og:image:height", content: isCecilia ? "1536" : "512" },
+        { property: "og:image:alt", content: "Convite de 15 anos da Cecília" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: image },
+        { name: "robots", content: "noindex, nofollow" },
+      ],
+    };
+  },
 });
 
 function PublicInvitation() {
