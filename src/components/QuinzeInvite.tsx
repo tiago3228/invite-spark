@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CalendarDays, Check, Clock, Heart, MapPin, MessageCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,18 +52,12 @@ export function QuinzeInvite({
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const startIntro = useCallback(() => {
+  function startIntro() {
     if (introStarted) return;
     setIntroStarted(true);
     void audioRef.current?.play().catch(() => undefined);
     window.requestAnimationFrame(() => void videoRef.current?.play().catch(() => undefined));
-  }, [introStarted]);
-
-  useEffect(() => {
-    if (stage !== "intro" || introStarted) return;
-    const timer = window.setTimeout(startIntro, 0);
-    return () => window.clearTimeout(timer);
-  }, [introStarted, stage, startIntro]);
+  }
 
   useEffect(() => {
     if (stage === "card") void audioRef.current?.play().catch(() => undefined);
@@ -112,16 +106,7 @@ export function QuinzeInvite({
     return (
       <>
         {audioUrl && <audio ref={audioRef} src={audioUrl} loop preload="auto" />}
-        <div
-          className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]"
-          onClick={startIntro}
-          role="button"
-          tabIndex={0}
-          aria-label="Iniciar abertura do convite com música"
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") startIntro();
-          }}
-        >
+        <div className="quinze-theme fixed inset-0 z-50 flex items-center justify-center bg-[var(--q-deep)]">
           <video
             ref={videoRef}
             src={videoUrl}
@@ -139,6 +124,14 @@ export function QuinzeInvite({
               {content["age"] || "15"} anos
             </p>
           </div>
+          {!introStarted && (
+            <button
+              onClick={startIntro}
+              className="absolute bottom-10 rounded-full bg-[var(--q-deep)] px-7 py-3 text-sm font-semibold uppercase tracking-widest text-[var(--q-paper)] shadow-xl"
+            >
+              ABRA SEU CONVITE
+            </button>
+          )}
         </div>
       </>
     );
