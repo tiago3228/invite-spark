@@ -190,30 +190,32 @@ export function QuinzeInvite({
                 className="absolute left-[52.8%] top-[75%] h-[7.2%] w-[33%] rounded-[18px] focus:outline-none focus:ring-4 focus:ring-white/80"
               />
             )}
-            {token && guest ? (
-              <button
-                disabled={busy}
-                onClick={() => respond("declined")}
-                className="absolute left-[15%] top-[84%] h-[5.5%] w-[70%] rounded-full bg-[#8e145b]/90 px-4 text-sm font-semibold text-white shadow-lg focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
-              >
-                Não poderei comparecer
-              </button>
-            ) : (
-              <Link
-                to="/convite/$slug/confirmar"
-                params={{ slug: invitation.slug }}
-                search={{ status: "declined" }}
-                className="absolute left-[15%] top-[84%] flex h-[5.5%] w-[70%] items-center justify-center rounded-full bg-[#8e145b]/90 px-4 text-sm font-semibold text-white shadow-lg focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
-              >
-                Não poderei comparecer
-              </Link>
-            )}
-            {msg && (
-              <div className="absolute left-[8%] top-[91%] w-[84%] rounded-2xl bg-white/95 p-3 text-center text-sm font-semibold text-[#76104e] shadow-lg">
-                {msg}
-              </div>
-            )}
           </div>
+        </div>
+        <div className="mx-auto flex w-full max-w-[1024px] flex-col items-center gap-3 px-5 pb-8 pt-4">
+          {token && guest ? (
+            <button
+              disabled={busy}
+              onClick={() => respond("declined")}
+              className="w-full max-w-md rounded-full bg-[#8e145b] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#76104e] focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
+            >
+              Não poderei comparecer
+            </button>
+          ) : (
+            <Link
+              to="/convite/$slug/confirmar"
+              params={{ slug: invitation.slug }}
+              search={{ status: "declined" }}
+              className="flex w-full max-w-md items-center justify-center rounded-full bg-[#8e145b] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#76104e] focus:outline-none focus:ring-4 focus:ring-white/80 sm:text-base"
+            >
+              Não poderei comparecer
+            </Link>
+          )}
+          {msg && (
+            <div className="w-full max-w-md rounded-2xl bg-white/95 p-3 text-center text-sm font-semibold text-[#76104e] shadow-lg">
+              {msg}
+            </div>
+          )}
         </div>
         {asking && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
