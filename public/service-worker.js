@@ -14,8 +14,8 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_URLS))
-      // A atualização só assume o controle depois que o usuário confirmar.
-      .then(() => self.skipWaiting()),
+      // O novo worker aguarda o usuário tocar em “Atualizar agora”.
+      .then(() => undefined),
   );
 });
 
