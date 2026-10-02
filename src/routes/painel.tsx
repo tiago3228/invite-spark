@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleHelp,
+  Clock3,
   ExternalLink,
   Flower2,
   Globe2,
@@ -12,6 +13,7 @@ import {
   MapPin,
   Palette,
   Plus,
+  RotateCcw,
   Share2,
   Sparkles,
   Trash2,
@@ -20,6 +22,18 @@ import {
 } from "lucide-react";
 import { supabase, getSupabaseSetupMessage } from "@/lib/supabase";
 import { DashboardShell } from "@/components/DashboardShell";
+
+type TrashRpcResult = {
+  data: boolean | number | null;
+  error: { message?: string } | null;
+};
+type InvitationDb = {
+  from: typeof supabase.from;
+  rpc: (functionName: string, args?: Record<string, unknown>) => Promise<TrashRpcResult>;
+};
+
+const invitationDb = supabase as unknown as InvitationDb;
+type InvitationView = "active" | "trash";
 
 export const Route = createFileRoute("/painel")({
   component: DashboardRoute,
@@ -44,6 +58,8 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [showHowWorks, setShowHowWorks] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [view, setView] = useState<InvitationView>("active");
   const [invitations, setInvitations] = useState<
     Array<{
       id: string;
@@ -53,8 +69,11 @@ function Dashboard() {
       status: string;
       updated_at: string;
       content: unknown;
+      deleted_at: string | null;
+      status_before_trash: string | null;
     }>
   >([]);
+  const [trashInvitations, setTrashInvitations] = useState<typeof invitations>([]);
 
   useEffect(() => {
     let active = true;
@@ -82,12 +101,20 @@ function Dashboard() {
         _user_id: data.session.user.id,
       });
       setIsMasterAdmin(Boolean(masterAdmin));
-      const { data: invitationRows } = await supabase
+      await invitationDb.rpc("purge_expired_own_invitations");
+      const { data: invitationRows, error: invitationError } = await invitationDb
         .from("invitations")
-        .select("id, title, event_type, status, updated_at, content, slug")
+        .select(
+          "id, title, event_type, status, updated_at, content, slug, deleted_at, status_before_trash",
+        )
         .eq("user_id", data.session.user.id)
         .order("updated_at", { ascending: false });
-      setInvitations((invitationRows ?? []) as typeof invitations);
+      if (invitationError) throw invitationError;
+      const rows = (invitationRows ?? []) as typeof invitations;
+      setInvitations(rows.filter((item) => !item.deleted_at && item.status !== "trashed"));
+      setTrashInvitations(
+        rows.filter((item) => Boolean(item.deleted_at) || item.status === "trashed"),
+      );
       setLoading(false);
     }
     void load();
@@ -101,20 +128,49 @@ function Dashboard() {
     await navigate({ to: "/" });
   }
 
-  async function deleteInvitation(invitation: (typeof invitations)[number]) {
+  async function moveInvitationToTrash(invitation: (typeof invitations)[number]) {
     const name = invitation.title || invitation.event_type || "este convite";
-    if (!window.confirm(`Excluir ${name}? Esta ação não pode ser desfeita.`)) return;
+    if (!window.confirm(`Mover ${name} para a lixeira? Você poderá restaurá-lo durante 30 dias.`))
+      return;
     setDeletingId(invitation.id);
-    const { error: deleteError } = await supabase
-      .from("invitations")
-      .delete()
-      .eq("id", invitation.id);
+    const { data: moved, error: deleteError } = await invitationDb.rpc("move_invitation_to_trash", {
+      _invitation_id: invitation.id,
+    });
     setDeletingId(null);
-    if (deleteError) {
-      setError("Não foi possível excluir o convite. Tente novamente.");
+    if (deleteError || !moved) {
+      setError(
+        "Não foi possível mover o convite para a lixeira. Execute a migração SQL e tente novamente.",
+      );
       return;
     }
     setInvitations((current) => current.filter((item) => item.id !== invitation.id));
+    setTrashInvitations((current) => [
+      { ...invitation, status: "trashed", deleted_at: new Date().toISOString() },
+      ...current,
+    ]);
+  }
+
+  async function restoreInvitation(invitation: (typeof trashInvitations)[number]) {
+    setRestoringId(invitation.id);
+    const { data: restored, error: restoreError } = await invitationDb.rpc(
+      "restore_invitation_from_trash",
+      { _invitation_id: invitation.id },
+    );
+    setRestoringId(null);
+    if (restoreError || !restored) {
+      setError("Este convite não pode mais ser restaurado. O prazo de 30 dias pode ter terminado.");
+      return;
+    }
+    setTrashInvitations((current) => current.filter((item) => item.id !== invitation.id));
+    setInvitations((current) => [
+      {
+        ...invitation,
+        status: invitation.status_before_trash || "draft",
+        deleted_at: null,
+        status_before_trash: null,
+      },
+      ...current,
+    ]);
   }
 
   if (loading)
@@ -201,16 +257,32 @@ function Dashboard() {
               Seus convites
             </h2>
           </div>
-          <Link
-            to="/criar"
-            className="inline-flex items-center gap-2 self-start rounded-lg border border-[#d9e5da] px-3.5 py-2.5 text-xs font-semibold text-[#2c302d] transition hover:bg-[#faf6f2]"
-          >
-            Novo projeto <Plus size={14} />
-          </Link>
+          <div className="flex flex-wrap items-center gap-2 self-start">
+            <button
+              type="button"
+              onClick={() => setView("active")}
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition ${view === "active" ? "bg-[#2f5145] text-white" : "border border-[#d9e5da] text-[#2c302d] hover:bg-[#faf6f2]"}`}
+            >
+              <Sparkles size={14} /> Meus convites ({invitations.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("trash")}
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-xs font-semibold transition ${view === "trash" ? "bg-[#8d5d4d] text-white" : "border border-[#ead8d1] text-[#8d5d4d] hover:bg-[#faf6f2]"}`}
+            >
+              <Trash2 size={14} /> Lixeira ({trashInvitations.length})
+            </button>
+            <Link
+              to="/criar"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#d9e5da] px-3.5 py-2.5 text-xs font-semibold text-[#2c302d] transition hover:bg-[#faf6f2]"
+            >
+              Novo projeto <Plus size={14} />
+            </Link>
+          </div>
         </div>
-        {invitations.length > 0 ? (
+        {(view === "active" ? invitations : trashInvitations).length > 0 ? (
           <div className="mt-6 grid gap-3 md:grid-cols-2">
-            {invitations.map((invitation) => (
+            {(view === "active" ? invitations : trashInvitations).map((invitation) => (
               <div
                 key={invitation.id}
                 className="group rounded-xl border border-[#edf1ed] bg-[#fbfcfb] p-4 transition hover:border-[#cbdccc] hover:bg-white hover:shadow-md"
@@ -245,53 +317,82 @@ function Dashboard() {
                     </div>
                     <div className="mt-2 flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#a0a19a]">
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${invitation.status === "published" ? "bg-[#7e9c86]" : "bg-[#c59475]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${view === "trash" ? "bg-[#b66b52]" : invitation.status === "published" ? "bg-[#7e9c86]" : "bg-[#c59475]"}`}
                       />
-                      {invitation.status === "draft" ? "Rascunho" : invitation.status}
+                      {view === "trash"
+                        ? "Na lixeira"
+                        : invitation.status === "draft"
+                          ? "Rascunho"
+                          : invitation.status}
                     </div>
                   </div>
                   <span className="rounded-lg bg-white px-2 py-1 text-[10px] text-[#a0a19a]">
                     {new Date(invitation.updated_at).toLocaleDateString("pt-BR")}
                   </span>
                 </div>
+                {view === "trash" && invitation.deleted_at && (
+                  <div className="mt-4 flex items-center gap-2 rounded-lg bg-[#fff7f2] px-3 py-2 text-xs text-[#8d5d4d]">
+                    <Clock3 size={14} />
+                    <span>
+                      Será removido em{" "}
+                      {new Date(
+                        new Date(invitation.deleted_at).getTime() + 30 * 24 * 60 * 60 * 1000,
+                      ).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                )}
                 <div className="mt-5 flex flex-wrap gap-2">
-                  <a
-                    href={`/criar?invitationId=${encodeURIComponent(invitation.id)}`}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#f3ebe5] px-3 py-2 text-xs font-semibold text-[#2c302d]"
-                  >
-                    Editar convite <ArrowRight size={14} />
-                  </a>
-                  <a
-                    href={`/painel/${encodeURIComponent(invitation.id)}/rsvp`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#777a74]"
-                  >
-                    Ver RSVP
-                  </a>
-                  <a
-                    href={`/painel/${encodeURIComponent(invitation.id)}/convidados`}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#2f5145] px-3 py-2 text-xs font-semibold text-white"
-                  >
-                    Convidados e links
-                  </a>
-                  {invitation.slug && invitation.status === "published" && (
-                    <a
-                      href={`/convite/${encodeURIComponent(invitation.slug)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#2f5145]"
+                  {view === "trash" ? (
+                    <button
+                      type="button"
+                      onClick={() => void restoreInvitation(invitation)}
+                      disabled={restoringId === invitation.id}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#2f5145] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
                     >
-                      <ExternalLink size={14} /> Ver convite
-                    </a>
+                      <RotateCcw size={14} />
+                      {restoringId === invitation.id ? "Restaurando…" : "Restaurar convite"}
+                    </button>
+                  ) : (
+                    <>
+                      <a
+                        href={`/criar?invitationId=${encodeURIComponent(invitation.id)}`}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#f3ebe5] px-3 py-2 text-xs font-semibold text-[#2c302d]"
+                      >
+                        Editar convite <ArrowRight size={14} />
+                      </a>
+                      <a
+                        href={`/painel/${encodeURIComponent(invitation.id)}/rsvp`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#777a74]"
+                      >
+                        Ver RSVP
+                      </a>
+                      <a
+                        href={`/painel/${encodeURIComponent(invitation.id)}/convidados`}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#2f5145] px-3 py-2 text-xs font-semibold text-white"
+                      >
+                        Convidados e links
+                      </a>
+                      {invitation.slug && invitation.status === "published" && (
+                        <a
+                          href={`/convite/${encodeURIComponent(invitation.slug)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 rounded-lg border border-[#dce7dd] px-3 py-2 text-xs font-semibold text-[#2f5145]"
+                        >
+                          <ExternalLink size={14} /> Ver convite
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => void moveInvitationToTrash(invitation)}
+                        disabled={deletingId === invitation.id}
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#f0d4cc] px-3 py-2 text-xs font-semibold text-[#9b4e3c] disabled:opacity-50"
+                      >
+                        <Trash2 size={14} />
+                        {deletingId === invitation.id ? "Movendo…" : "Lixeira"}
+                      </button>
+                    </>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => void deleteInvitation(invitation)}
-                    disabled={deletingId === invitation.id}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#f0d4cc] px-3 py-2 text-xs font-semibold text-[#9b4e3c] disabled:opacity-50"
-                  >
-                    <Trash2 size={14} />
-                    {deletingId === invitation.id ? "Excluindo…" : "Excluir"}
-                  </button>
                 </div>
               </div>
             ))}
@@ -301,16 +402,22 @@ function Dashboard() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f3ebe5] text-[#2c302d]">
               <Sparkles size={20} />
             </div>
-            <h3 className="mt-4 font-semibold text-[#41443f]">Seu primeiro convite começa aqui</h3>
+            <h3 className="mt-4 font-semibold text-[#41443f]">
+              {view === "trash" ? "A lixeira está vazia" : "Seu primeiro convite começa aqui"}
+            </h3>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#777a74]">
-              Escolha um modelo, adicione seus detalhes e publique um link pronto para compartilhar.
+              {view === "trash"
+                ? "Convites excluídos ficam disponíveis aqui para restauração durante 30 dias."
+                : "Escolha um modelo, adicione seus detalhes e publique um link pronto para compartilhar."}
             </p>
-            <Link
-              to="/criar"
-              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#2c302d] px-4 py-3 text-xs font-semibold text-white"
-            >
-              Começar agora <ArrowRight size={14} />
-            </Link>
+            {view === "active" && (
+              <Link
+                to="/criar"
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#2c302d] px-4 py-3 text-xs font-semibold text-white"
+              >
+                Começar agora <ArrowRight size={14} />
+              </Link>
+            )}
           </div>
         )}
       </section>
