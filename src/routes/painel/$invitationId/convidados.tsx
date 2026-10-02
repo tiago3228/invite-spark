@@ -70,11 +70,7 @@ function GuestsPage() {
     const [{ data: inv }, { data: g }] = await Promise.all([
       db
         .from("invitations")
-<<<<<<< HEAD
         .select("id,title,slug,status,event_date,event_time,rsvp_config")
-=======
-        .select("id,title,slug,status,event_date,event_time,location")
->>>>>>> b0a7b6d (fix: improve whatsapp invitation preview)
         .eq("id", invitationId)
         .maybeSingle(),
       db.from("guests").select("*").eq("invitation_id", invitationId).order("created_at"),
@@ -177,7 +173,6 @@ function GuestsPage() {
     }
   }
   function sendWhatsapp(g: Guest, reminder: boolean) {
-<<<<<<< HEAD
     const customMessage = inviteMessage
       .replaceAll("[NOME]", g.name)
       .replaceAll("[EVENTO]", inviteEvent.trim() || invitation?.title || "nosso evento")
@@ -189,17 +184,6 @@ function GuestsPage() {
         ? `Olá, ${g.name}! Confirmamos sua presença em ${invitation?.title}. Serão ${g.companions + 1} pessoa(s) no total. Será uma alegria receber vocês!`
         : customMessage;
     window.open(whatsappUrl(g.whatsapp, text), "_blank", "noopener,noreferrer");
-=======
-    const eventDate = invitation?.event_date
-      ? new Date(`${invitation.event_date}T00:00:00`).toLocaleDateString("pt-BR")
-      : "";
-    const location = invitation?.location?.venueName || "";
-    const text = reminder
-      ? `Olá ${g.name}! Ainda não recebemos sua resposta para o convite de ${invitation?.title}. Pode confirmar por aqui? ${linkFor(g)}`
-      : `Olá ${g.name}! Você está convidado(a) para ${invitation?.title || "um evento especial"}${eventDate ? `, no dia ${eventDate}` : ""}${location ? `, em ${location}` : ""}.\n\nAbra seu convite digital, veja todos os detalhes e confirme sua presença:\n${linkFor(g)}`;
-    const num = g.whatsapp.length <= 11 ? `55${g.whatsapp}` : g.whatsapp;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, "_blank");
->>>>>>> b0a7b6d (fix: improve whatsapp invitation preview)
     if (reminder)
       void db.from("guests").update({ reminded_at: new Date().toISOString() }).eq("id", g.id);
   }

@@ -21,7 +21,6 @@ export const Route = createFileRoute("/convite/$slug")({
   validateSearch: (s: Record<string, unknown>): { g?: string | undefined } => ({
     g: typeof s["g"] === "string" ? (s["g"] as string) : undefined,
   }),
-<<<<<<< HEAD
   head: ({ params }) => {
     const isCecilia = params.slug === "cecilia-15-anos";
     const canonicalUrl = `https://meus-convites.lovable.app/convite/${params.slug}`;
@@ -33,7 +32,7 @@ export const Route = createFileRoute("/convite/$slug")({
       : "Abra seu convite virtual e confirme sua presença.";
     const image = isCecilia
       ? "https://meus-convites.lovable.app/convites/cecilia-15-anos.jpeg?v=2"
-      : "https://meus-convites.lovable.app/icon-512.svg";
+      : "https://meus-convites.lovable.app/media-library/capa-jardim.jpg";
     return {
       links: [{ rel: "canonical", href: canonicalUrl }],
       meta: [
@@ -46,10 +45,10 @@ export const Route = createFileRoute("/convite/$slug")({
         { property: "og:type", content: "website" },
         { property: "og:image", content: image },
         { property: "og:image:secure_url", content: image },
-        { property: "og:image:type", content: isCecilia ? "image/jpeg" : "image/svg+xml" },
-        { property: "og:image:width", content: isCecilia ? "1024" : "512" },
-        { property: "og:image:height", content: isCecilia ? "1536" : "512" },
-        { property: "og:image:alt", content: "Convite de 15 anos da Cecília" },
+        { property: "og:image:type", content: "image/jpeg" },
+        { property: "og:image:width", content: isCecilia ? "1024" : "1200" },
+        { property: "og:image:height", content: isCecilia ? "1536" : "630" },
+        { property: "og:image:alt", content: "Prévia do convite digital Meu Convite" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
@@ -58,29 +57,6 @@ export const Route = createFileRoute("/convite/$slug")({
       ],
     };
   },
-=======
-  head: () => ({
-    meta: [
-      { title: "Você está convidado | Meu Convite" },
-      { name: "description", content: "Abra seu convite e confirme sua presença." },
-      { property: "og:title", content: "Você está convidado" },
-      { property: "og:description", content: "Abra seu convite e confirme sua presença." },
-      { property: "og:type", content: "website" },
-      {
-        property: "og:image",
-        content: "https://meus-convites.lovable.app/media-library/capa-jardim.jpg",
-      },
-      { property: "og:image:alt", content: "Prévia do convite digital Meu Convite" },
-      { property: "og:site_name", content: "Meu Convite" },
-      { name: "twitter:card", content: "summary" },
-      {
-        name: "twitter:image",
-        content: "https://meus-convites.lovable.app/media-library/capa-jardim.jpg",
-      },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
->>>>>>> b0a7b6d (fix: improve whatsapp invitation preview)
 });
 
 function PublicInvitation() {
