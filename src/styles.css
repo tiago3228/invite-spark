@@ -7,6 +7,8 @@
   html {
     scroll-behavior: smooth;
     background: #f8f8f6;
+    min-height: 100%;
+    overscroll-behavior-y: none;
   }
   body {
     margin: 0;
@@ -14,6 +16,9 @@
     color: #232522;
     font-family: "Manrope", sans-serif;
     -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
   }
   button,
   a,
@@ -476,11 +481,22 @@
   --q-pink: oklch(0.88 0.07 350);
   --q-water: oklch(0.72 0.14 330);
 }
-.quinze-script { font-family: "Great Vibes", cursive; font-weight: 400; }
+.quinze-script {
+  font-family: "Great Vibes", cursive;
+  font-weight: 400;
+}
 .quinze-water {
   background:
-    radial-gradient(circle at 20% 10%, color-mix(in oklab, var(--q-water) 60%, transparent), transparent 40%),
-    radial-gradient(circle at 80% 90%, color-mix(in oklab, var(--q-water) 55%, transparent), transparent 45%),
+    radial-gradient(
+      circle at 20% 10%,
+      color-mix(in oklab, var(--q-water) 60%, transparent),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 90%,
+      color-mix(in oklab, var(--q-water) 55%, transparent),
+      transparent 45%
+    ),
     var(--q-pink);
 }
 .quinze-card {
@@ -488,13 +504,39 @@
   border: 1px solid color-mix(in oklab, var(--q-deep) 20%, transparent);
 }
 .quinze-btn {
-  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-  border-radius: 1rem; padding: 0.9rem 1rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.05em; font-size: 0.85rem;
-  background: var(--q-deep); color: var(--q-paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  background: var(--q-deep);
+  color: var(--q-paper);
   box-shadow: 0 8px 20px -8px var(--q-deep);
 }
-.quinze-btn-outline { background: transparent; color: var(--q-deep); border: 2px solid var(--q-deep); box-shadow: none; }
-@keyframes quinze-rise { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: none; } }
-.quinze-rise { animation: quinze-rise 1.4s ease-out both; }
-.quinze-rise-late { animation: quinze-rise 1.4s ease-out 0.8s both; }
+.quinze-btn-outline {
+  background: transparent;
+  color: var(--q-deep);
+  border: 2px solid var(--q-deep);
+  box-shadow: none;
+}
+@keyframes quinze-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.quinze-rise {
+  animation: quinze-rise 1.4s ease-out both;
+}
+.quinze-rise-late {
+  animation: quinze-rise 1.4s ease-out 0.8s both;
+}

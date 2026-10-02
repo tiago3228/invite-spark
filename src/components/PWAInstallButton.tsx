@@ -3,8 +3,9 @@ import { Check, Download, Info, X } from "lucide-react";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 
 export function PWAInstallButton() {
-  const { canInstall, isInstalled, isIOS, install } = usePWAInstall();
+  const { canInstall, isInstalled, isIOS, install, dismiss } = usePWAInstall();
   const [showHelp, setShowHelp] = useState(false);
+
   if (isInstalled)
     return (
       <span
@@ -15,8 +16,9 @@ export function PWAInstallButton() {
       </span>
     );
   if (!canInstall && !isIOS) return null;
+
   return (
-    <div className="relative">
+    <div className="relative flex items-center gap-1">
       <button
         type="button"
         onClick={() => {
@@ -24,9 +26,17 @@ export function PWAInstallButton() {
           else void install();
         }}
         className="inline-flex items-center gap-2 rounded-full border border-[#d9e4da] bg-white px-4 py-2.5 text-sm font-medium text-[#2f5145] transition hover:border-[#9ab5a0] hover:bg-[#f1f6f1]"
-        aria-label="Instalar aplicativo"
+        aria-label="Instalar aplicativo Meu Convite"
       >
         <Download size={16} /> Instalar aplicativo
+      </button>
+      <button
+        type="button"
+        onClick={dismiss}
+        className="rounded-full p-2 text-[#aaa59d] transition hover:bg-[#f4f1ed] hover:text-[#625d55]"
+        aria-label="Não mostrar o convite de instalação novamente"
+      >
+        <X size={15} />
       </button>
       {showHelp && (
         <div className="absolute right-0 top-12 z-30 w-72 rounded-2xl border border-[#e6e0d7] bg-white p-4 text-sm leading-6 text-[#5f5b54] shadow-xl">

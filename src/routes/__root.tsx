@@ -11,6 +11,11 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { PWAStatusBar } from "@/components/PWAStatusBar";
+
+function notifyPWAUpdateAvailable() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("meu-convite:pwa-update"));
+}
 
 function NotFoundComponent() {
   return (
@@ -77,6 +82,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#2f5145" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Meu Convite" },
       { title: "Meu Convite — convites digitais inesquecíveis" },
       {
         name: "description",
@@ -104,6 +114,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/icon-192.svg", sizes: "192x192" },
       { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
@@ -131,13 +142,34 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/service-worker.js");
-    }
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+
+    let disposed = false;
+    void navigator.serviceWorker
+      .register("/service-worker.js", { updateViaCache: "none" })
+      .then((registration) => {
+        if (disposed) return;
+        if (registration.waiting) notifyPWAUpdateAvailable();
+        registration.addEventListener("updatefound", () => {
+          const worker = registration.installing;
+          if (!worker) return;
+          worker.addEventListener("statechange", () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+              notifyPWAUpdateAvailable();
+            }
+          });
+        });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      disposed = true;
+    };
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
+      <PWAStatusBar />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

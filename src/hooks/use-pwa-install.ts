@@ -5,6 +5,8 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const DISMISSED_KEY = "meu-convite:pwa-install-dismissed";
+
 function getStandalone() {
   if (typeof window === "undefined") return false;
   const safariNavigator = window.navigator as Navigator & { standalone?: boolean };
@@ -13,14 +15,22 @@ function getStandalone() {
   );
 }
 
+function getDismissed() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(DISMISSED_KEY) === "1";
+}
+
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(getStandalone);
   const [isIOS, setIsIOS] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(getDismissed);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setIsIOS(/iphone|ipad|ipod/i.test(window.navigator.userAgent) && !getStandalone());
+    setIsDismissed(getDismissed());
+
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
       setDeferredPrompt(event as BeforeInstallPromptEvent);
@@ -28,6 +38,7 @@ export function usePWAInstall() {
     const onInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
+      window.localStorage.removeItem(DISMISSED_KEY);
     };
     const media = window.matchMedia("(display-mode: standalone)");
     const onModeChange = () => setIsInstalled(getStandalone());
@@ -50,5 +61,16 @@ export function usePWAInstall() {
     return choice.outcome === "accepted";
   }, [deferredPrompt]);
 
-  return { canInstall: Boolean(deferredPrompt), isInstalled, isIOS, install };
+  const dismiss = useCallback(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem(DISMISSED_KEY, "1");
+    setIsDismissed(true);
+  }, []);
+
+  return {
+    canInstall: Boolean(deferredPrompt) && !isDismissed,
+    isInstalled,
+    isIOS: isIOS && !isDismissed,
+    install,
+    dismiss,
+  };
 }
