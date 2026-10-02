@@ -21,6 +21,7 @@ export const Route = createFileRoute("/convite/$slug")({
   validateSearch: (s: Record<string, unknown>): { g?: string | undefined } => ({
     g: typeof s["g"] === "string" ? (s["g"] as string) : undefined,
   }),
+<<<<<<< HEAD
   head: ({ params }) => {
     const isCecilia = params.slug === "cecilia-15-anos";
     const canonicalUrl = `https://meus-convites.lovable.app/convite/${params.slug}`;
@@ -57,6 +58,29 @@ export const Route = createFileRoute("/convite/$slug")({
       ],
     };
   },
+=======
+  head: () => ({
+    meta: [
+      { title: "Você está convidado | Meu Convite" },
+      { name: "description", content: "Abra seu convite e confirme sua presença." },
+      { property: "og:title", content: "Você está convidado" },
+      { property: "og:description", content: "Abra seu convite e confirme sua presença." },
+      { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://meus-convites.lovable.app/media-library/capa-jardim.jpg",
+      },
+      { property: "og:image:alt", content: "Prévia do convite digital Meu Convite" },
+      { property: "og:site_name", content: "Meu Convite" },
+      { name: "twitter:card", content: "summary" },
+      {
+        name: "twitter:image",
+        content: "https://meus-convites.lovable.app/media-library/capa-jardim.jpg",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
+>>>>>>> b0a7b6d (fix: improve whatsapp invitation preview)
 });
 
 function PublicInvitation() {
@@ -67,6 +91,28 @@ function PublicInvitation() {
   const [opened, setOpened] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  useEffect(() => {
+    if (!invitation) return;
+    const content = (invitation.content ?? {}) as Record<string, any>;
+    const media = (content["media"] ?? {}) as Record<string, any>;
+    const title = String(invitation.title || invitation.event_type || "Você está convidado");
+    const description = String(
+      content["phrase"] || content["description"] || "Abra seu convite e confirme sua presença.",
+    );
+    document.title = `${title} | Meu Convite`;
+    const setMeta = (selector: string, attribute: string, value: string) => {
+      const element = document.querySelector<HTMLMetaElement>(selector);
+      if (element) element.setAttribute(attribute, value);
+    };
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[name="twitter:title"]', "content", title);
+    setMeta('meta[name="twitter:description"]', "content", description);
+    if (media["coverUrl"]) {
+      setMeta('meta[property="og:image"]', "content", String(media["coverUrl"]));
+      setMeta('meta[name="twitter:image"]', "content", String(media["coverUrl"]));
+    }
+  }, [invitation]);
   useEffect(() => {
     let active = true;
     const timeout = window.setTimeout(() => {
