@@ -23,6 +23,7 @@ export const Route = createFileRoute("/convite/$slug")({
   }),
   head: ({ params }) => {
     const isCecilia = params.slug === "cecilia-15-anos";
+    const canonicalUrl = `https://meus-convites.lovable.app/convite/${params.slug}`;
     const title = isCecilia
       ? "Cecília faz 15 anos | Meu Convite"
       : "Você está convidado | Meu Convite";
@@ -30,16 +31,21 @@ export const Route = createFileRoute("/convite/$slug")({
       ? "Você está convidado para comemorar os 15 anos da Cecília. Abra o convite virtual para ver todos os detalhes."
       : "Abra seu convite virtual e confirme sua presença.";
     const image = isCecilia
-      ? "https://meus-convites.lovable.app/convites/cecilia-15-anos.jpeg"
+      ? "https://meus-convites.lovable.app/convites/cecilia-15-anos.jpeg?v=2"
       : "https://meus-convites.lovable.app/icon-512.svg";
     return {
+      links: [{ rel: "canonical", href: canonicalUrl }],
       meta: [
         { title },
         { name: "description", content: description },
+        { property: "og:url", content: canonicalUrl },
+        { property: "og:site_name", content: "Meu Convite" },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { property: "og:image", content: image },
+        { property: "og:image:secure_url", content: image },
+        { property: "og:image:type", content: isCecilia ? "image/jpeg" : "image/svg+xml" },
         { property: "og:image:width", content: isCecilia ? "1024" : "512" },
         { property: "og:image:height", content: isCecilia ? "1536" : "512" },
         { property: "og:image:alt", content: "Convite de 15 anos da Cecília" },
